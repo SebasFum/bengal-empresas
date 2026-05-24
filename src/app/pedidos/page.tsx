@@ -46,7 +46,7 @@ export default function PedidosPage() {
               <h1 className="text-2xl font-bold text-graphite-800">Hacé tu pedido</h1>
               <div className="flex items-center gap-4 mt-1">
                 <span className="text-warm-400 text-sm">Jueves 18 de enero</span>
-                <span className="flex items-center gap-1 text-xs font-medium text-terracotta-600 bg-terracotta-50 px-2.5 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-medium text-terracotta-600 bg-terracotta-50 px-3 py-1.5 rounded-full">
                   <Clock size={11} /> Corte: 10:00 hs
                 </span>
               </div>
@@ -67,7 +67,7 @@ export default function PedidosPage() {
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
                   activeCategory === cat.id
                     ? "bg-terracotta-500 text-white"
                     : "bg-cream-200 text-graphite-600 hover:bg-cream-300"
@@ -127,7 +127,7 @@ export default function PedidosPage() {
                 )}
                 <div className="absolute bottom-2 left-2 flex gap-1">
                   {menu.tags.slice(0, 2).map((t) => (
-                    <span key={t} className="px-2 py-0.5 bg-terracotta-500/90 text-white text-[10px] font-medium rounded-full">{t}</span>
+                    <span key={t} className="px-3 py-1 bg-terracotta-500/90 text-white text-xs font-medium rounded-full">{t}</span>
                   ))}
                 </div>
               </div>

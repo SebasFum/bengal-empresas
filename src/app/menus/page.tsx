@@ -91,7 +91,7 @@ export default function MenusPage() {
                   {/* Tags */}
                   <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
                     {menu.tags.slice(0, 2).map((tag) => (
-                      <span key={tag} className="px-2 py-0.5 bg-terracotta-500/90 text-white text-xs font-medium rounded-full">
+                      <span key={tag} className="px-3 py-1 bg-terracotta-500/90 text-white text-xs font-medium rounded-full">
                         {tag}
                       </span>
                     ))}

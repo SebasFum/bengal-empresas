@@ -65,7 +65,7 @@ export default function PanelEmpresaPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-xs text-warm-400">{user.orders} pedidos</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       user.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                     }`}>
                       {user.active ? "Activo" : "Inactivo"}
@@ -88,7 +88,7 @@ export default function PanelEmpresaPage() {
                 <div key={o.id} className="px-5 py-3.5">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-medium text-graphite-800 leading-tight">{o.menu}</p>
-                    <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    <span className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium ${
                       o.status === "entregado" ? "bg-green-100 text-green-700" :
                       o.status === "en camino" ? "bg-blue-100 text-blue-700" :
                       "bg-gold-100 text-gold-700"

@@ -94,7 +94,7 @@ export default function EventosPage() {
                 <div className="relative h-44 img-zoom">
                   <Image src={event.image} alt={event.title} fill className="object-cover" />
                   <div className="absolute bottom-3 left-3">
-                    <span className="px-2.5 py-1 bg-graphite-800/80 text-cream-200 text-xs font-medium rounded-full backdrop-blur-sm">
+                    <span className="px-3 py-1.5 bg-graphite-800/80 text-cream-200 text-xs font-medium rounded-full backdrop-blur-sm">
                       {event.capacity}
                     </span>
                   </div>

@@ -175,7 +175,7 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-graphite-900/60 to-transparent" />
                   <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
                     {menu.tags.slice(0, 2).map((tag) => (
-                      <span key={tag} className="px-2.5 py-1 bg-terracotta-500/90 text-white text-xs font-medium rounded-full">
+                      <span key={tag} className="px-3 py-1.5 bg-terracotta-500/90 text-white text-xs font-medium rounded-full">
                         {tag}
                       </span>
                     ))}

@@ -60,7 +60,7 @@ export default function HistorialPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusColors[order.status] || "bg-gray-100 text-gray-600"}`}>
+                  <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${statusColors[order.status] || "bg-gray-100 text-gray-600"}`}>
                     {order.status}
                   </span>
                   <span className="font-bold text-graphite-800 text-sm">${order.total.toLocaleString()}</span>

@@ -90,7 +90,7 @@ export default function PanelAdminPage() {
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-graphite-800">{menu.name}</p>
                       {!menu.active && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">Inactivo</span>
+                        <span className="px-3 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Inactivo</span>
                       )}
                     </div>
                     <p className="text-xs text-warm-400 mt-0.5">{menu.date}</p>
@@ -145,7 +145,7 @@ export default function PanelAdminPage() {
                     <p className="text-warm-400 text-xs mt-0.5">{order.id} · {order.date}</p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
                       order.status === "entregado" ? "bg-green-100 text-green-700" :
                       order.status === "en camino" ? "bg-blue-100 text-blue-700" :
                       "bg-gold-100 text-gold-700"
@@ -182,7 +182,7 @@ export default function PanelAdminPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-xs text-warm-400">{u.orders} pedidos</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${u.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${u.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                       {u.active ? "Activa" : "Inactiva"}
                     </span>
                     <button className="text-xs text-terracotta-600 font-semibold hover:text-terracotta-700">Ver</button>
