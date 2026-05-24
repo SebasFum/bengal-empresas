@@ -43,7 +43,7 @@ export default function MenusPage() {
       </section>
 
       {/* FILTROS */}
-      <div className="sticky top-16 z-40 bg-cream-100 border-b border-cream-200 shadow-sm">
+      <div className="sticky top-16 lg:top-20 z-40 bg-cream-100 border-b border-cream-200 shadow-sm">
         <div className="container-xl py-4">
           <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-hide">
             <Filter size={16} className="text-warm-400 flex-shrink-0" />

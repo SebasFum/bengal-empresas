@@ -31,7 +31,7 @@ export const menus = [
     price: 6500,
     calories: 490,
     tags: ["saludable"],
-    image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c8?w=600&q=80",
+    image: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=600&q=80",
     available: true,
     featured: false,
   },
