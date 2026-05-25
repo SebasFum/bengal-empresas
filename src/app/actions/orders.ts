@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { sendOrderConfirmation } from "@/lib/email";
+import type { Segment } from "@/lib/supabase/types";
 
 export type PlaceOrderInput = {
   menu_id: string;
@@ -11,6 +12,7 @@ export type PlaceOrderInput = {
   extras: string[];
   notes: string;
   total: number;
+  segment?: Segment;
 };
 
 export type ActionResult =
@@ -46,6 +48,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<ActionResult> 
       extras: input.extras,
       notes: input.notes || null,
       total: input.total,
+      segment: input.segment ?? null,
     })
     .select("id")
     .single();

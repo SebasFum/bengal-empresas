@@ -3,11 +3,25 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, Heart, CheckCircle, Clock, Flame, X, RefreshCw, AlertCircle } from "lucide-react";
+import { ShoppingCart, Heart, CheckCircle, Clock, Flame, X, RefreshCw, AlertCircle, Tag } from "lucide-react";
 import { placeOrder } from "@/app/actions/orders";
 import type { MenuItem } from "./page";
+import type { Segment } from "@/lib/supabase/types";
 
 const AVAILABLE_EXTRAS = ["Ensalada extra", "Pan artesanal", "Agua mineral", "Jugo natural", "Postre del día"];
+
+const SEGMENT_COLOR: Record<string, string> = {
+  empresa: "bg-blue-50 text-blue-700 border-blue-200",
+  hogar:   "bg-green-50 text-green-700 border-green-200",
+  eventos: "bg-purple-50 text-purple-700 border-purple-200",
+};
+
+type Promo = {
+  id: string; name: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  minOrderTotal: number | null;
+};
 
 type Props = {
   menuItems: MenuItem[];
@@ -15,9 +29,15 @@ type Props = {
   today: string;
   todayLabel: string;
   userInitial: string;
+  userSegment: Segment;
+  segmentLabel: string;
+  promotions: Promo[];
 };
 
-export default function PedidosClient({ menuItems, categories, today, todayLabel, userInitial }: Props) {
+export default function PedidosClient({
+  menuItems, categories, today, todayLabel,
+  userInitial, userSegment, segmentLabel, promotions,
+}: Props) {
   const [activeCategory, setActiveCategory] = useState("todos");
   const [selected, setSelected] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -30,26 +50,33 @@ export default function PedidosClient({ menuItems, categories, today, todayLabel
 
   const filtered = activeCategory === "todos"
     ? menuItems
-    : menuItems.filter((m) =>
-        m.category === activeCategory || m.tags.includes(activeCategory)
-      );
+    : menuItems.filter((m) => m.category === activeCategory || m.tags.includes(activeCategory));
 
   const selectedMenu = menuItems.find((m) => m.id === selected);
 
-  const toggleFav = (id: string) =>
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
+  // Calcular precio con promoción aplicable
+  const getEffectivePrice = (menu: MenuItem) => {
+    const base = menu.segmentPrice;
+    const applicablePromo = promotions.find(
+      (p) => p.minOrderTotal === null || base >= p.minOrderTotal
     );
+    if (!applicablePromo) return { price: base, discount: 0, promo: null };
+    const discount = applicablePromo.discountType === "percentage"
+      ? base * (applicablePromo.discountValue / 100)
+      : applicablePromo.discountValue;
+    return { price: Math.max(0, base - discount), discount, promo: applicablePromo };
+  };
+
+  const toggleFav = (id: string) =>
+    setFavorites((prev) => prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]);
 
   const toggleExtra = (e: string) =>
-    setExtras((prev) =>
-      prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]
-    );
+    setExtras((prev) => prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]);
 
   const handleConfirm = () => {
     if (!selectedMenu) return;
     setError(null);
-
+    const { price } = getEffectivePrice(selectedMenu);
     startTransition(async () => {
       const result = await placeOrder({
         menu_id: selectedMenu.id,
@@ -57,9 +84,9 @@ export default function PedidosClient({ menuItems, categories, today, todayLabel
         date: today,
         extras,
         notes: nota,
-        total: selectedMenu.price,
+        total: price,
+        segment: userSegment,
       });
-
       if (result.success) {
         setConfirmedName(selectedMenu.name);
         setConfirmed(true);
@@ -79,8 +106,13 @@ export default function PedidosClient({ menuItems, categories, today, todayLabel
         <div className="container-xl">
           <div className="flex flex-col md:flex-row md:items-center justify-between py-6 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-graphite-800">Hacé tu pedido</h1>
-              <div className="flex items-center gap-4 mt-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-2xl font-bold text-graphite-800">Hacé tu pedido</h1>
+                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${SEGMENT_COLOR[userSegment] ?? "bg-gray-100 text-gray-600"}`}>
+                  {segmentLabel}
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
                 <span className="text-warm-400 text-sm capitalize">{todayLabel}</span>
                 <span className="flex items-center gap-1 text-xs font-medium text-terracotta-600 bg-terracotta-50 px-3 py-1.5 rounded-full">
                   <Clock size={11} /> Corte: 10:00 hs
@@ -97,18 +129,25 @@ export default function PedidosClient({ menuItems, categories, today, todayLabel
             </div>
           </div>
 
+          {/* Promociones activas */}
+          {promotions.length > 0 && (
+            <div className="flex gap-2 pb-3 overflow-x-auto">
+              {promotions.map((p) => (
+                <div key={p.id} className="flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 bg-terracotta-50 border border-terracotta-200 rounded-full text-xs font-semibold text-terracotta-700">
+                  <Tag size={11} />
+                  {p.name} — {p.discountType === "percentage" ? `${p.discountValue}% OFF` : `$${p.discountValue} OFF`}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Filtros */}
           <div className="flex gap-2 overflow-x-auto pb-3 pt-1">
             {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+              <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
-                  activeCategory === cat.id
-                    ? "bg-terracotta-500 text-white"
-                    : "bg-cream-200 text-graphite-600 hover:bg-cream-300"
-                }`}
-              >
+                  activeCategory === cat.id ? "bg-terracotta-500 text-white" : "bg-cream-200 text-graphite-600 hover:bg-cream-300"
+                }`}>
                 {cat.label}
               </button>
             ))}
@@ -123,155 +162,130 @@ export default function PedidosClient({ menuItems, categories, today, todayLabel
             <CheckCircle size={22} className="text-green-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-green-800">¡Pedido confirmado!</p>
-              <p className="text-green-600 text-sm">
-                <strong>{confirmedName}</strong> — llegará hoy. Te enviamos la confirmación por mail.
-              </p>
+              <p className="text-green-600 text-sm"><strong>{confirmedName}</strong> — te enviamos la confirmación por mail.</p>
             </div>
-            <button onClick={() => setConfirmed(false)} className="ml-auto text-green-400 hover:text-green-600">
-              <X size={16} />
-            </button>
+            <button onClick={() => setConfirmed(false)} className="ml-auto text-green-400 hover:text-green-600"><X size={16} /></button>
           </div>
         </div>
       )}
 
-      {/* Sin menú disponible */}
       {menuItems.length === 0 && (
         <div className="container-xl py-20 text-center">
           <p className="text-warm-400 text-lg">No hay menú disponible para hoy.</p>
-          <p className="text-warm-300 text-sm mt-2">Volvé mañana o consultá con tu administrador.</p>
         </div>
       )}
 
       {/* Grilla */}
       <div className="container-xl py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map((menu) => (
-            <div
-              key={menu.id}
-              onClick={() => { setSelected(menu.id); setError(null); }}
-              className={`bg-white rounded-2xl overflow-hidden border-2 cursor-pointer transition-all card-lift ${
-                selected === menu.id
-                  ? "border-terracotta-500 shadow-warm-md"
-                  : "border-cream-200 shadow-card hover:border-terracotta-200"
-              }`}
-            >
-              <div className="relative h-44 img-zoom">
-                <Image
-                  src={menu.image_url ?? "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80"}
-                  alt={menu.name}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleFav(menu.id); }}
-                  className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center"
-                >
-                  <Heart size={14} className={favorites.includes(menu.id) ? "text-red-500 fill-red-500" : "text-warm-400"} />
-                </button>
-                {selected === menu.id && (
-                  <div className="absolute inset-0 bg-terracotta-500/20 flex items-center justify-center">
-                    <div className="w-10 h-10 bg-terracotta-500 rounded-full flex items-center justify-center">
-                      <CheckCircle size={20} className="text-white" />
+          {filtered.map((menu) => {
+            const { price, discount, promo } = getEffectivePrice(menu);
+            return (
+              <div key={menu.id}
+                onClick={() => { setSelected(menu.id); setError(null); }}
+                className={`bg-white rounded-2xl overflow-hidden border-2 cursor-pointer transition-all card-lift ${
+                  selected === menu.id ? "border-terracotta-500 shadow-warm-md" : "border-cream-200 shadow-card hover:border-terracotta-200"
+                }`}>
+                <div className="relative h-44 img-zoom">
+                  <Image src={menu.image_url ?? "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80"} alt={menu.name} fill className="object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                  <button onClick={(e) => { e.stopPropagation(); toggleFav(menu.id); }}
+                    className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center">
+                    <Heart size={14} className={favorites.includes(menu.id) ? "text-red-500 fill-red-500" : "text-warm-400"} />
+                  </button>
+                  {selected === menu.id && (
+                    <div className="absolute inset-0 bg-terracotta-500/20 flex items-center justify-center">
+                      <div className="w-10 h-10 bg-terracotta-500 rounded-full flex items-center justify-center">
+                        <CheckCircle size={20} className="text-white" />
+                      </div>
+                    </div>
+                  )}
+                  {promo && (
+                    <div className="absolute top-3 left-3">
+                      <span className="px-2.5 py-1 bg-terracotta-500 text-white text-xs font-bold rounded-full">
+                        {promo.discountType === "percentage" ? `${promo.discountValue}% OFF` : `-$${promo.discountValue}`}
+                      </span>
+                    </div>
+                  )}
+                  <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
+                    {menu.tags.slice(0, 2).map((t) => (
+                      <span key={t} className="px-3 py-1 bg-terracotta-500/90 text-white text-xs font-medium rounded-full">{t}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-graphite-800 text-sm mb-1 leading-tight">{menu.name}</h3>
+                  <p className="text-warm-400 text-xs leading-relaxed mb-2 line-clamp-1">{menu.description}</p>
+                  <div className="flex items-center justify-between">
+                    {menu.calories ? (
+                      <span className="flex items-center gap-1 text-xs text-warm-400"><Flame size={11} className="text-terracotta-400" /> {menu.calories} kcal</span>
+                    ) : <span />}
+                    <div className="text-right">
+                      {discount > 0 && (
+                        <p className="text-warm-300 text-xs line-through">${menu.segmentPrice.toLocaleString("es-AR")}</p>
+                      )}
+                      <span className="text-terracotta-600 font-bold text-sm">${price.toLocaleString("es-AR")}</span>
                     </div>
                   </div>
-                )}
-                <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
-                  {menu.tags.slice(0, 2).map((t) => (
-                    <span key={t} className="px-3 py-1 bg-terracotta-500/90 text-white text-xs font-medium rounded-full">{t}</span>
-                  ))}
                 </div>
               </div>
-              <div className="p-4">
-                <h3 className="font-bold text-graphite-800 text-sm mb-1 leading-tight">{menu.name}</h3>
-                <p className="text-warm-400 text-xs leading-relaxed mb-2 line-clamp-1">{menu.description}</p>
-                <div className="flex items-center justify-between">
-                  {menu.calories ? (
-                    <span className="flex items-center gap-1 text-xs text-warm-400">
-                      <Flame size={11} className="text-terracotta-400" /> {menu.calories} kcal
-                    </span>
-                  ) : <span />}
-                  <span className="text-terracotta-600 font-bold text-sm">${menu.price.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Modal de confirmación */}
+      {/* Modal confirmación */}
       {selectedMenu && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4 bg-graphite-900/50">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
             <div className="relative h-48">
-              <Image
-                src={selectedMenu.image_url ?? "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80"}
-                alt={selectedMenu.name}
-                fill
-                className="object-cover"
-              />
+              <Image src={selectedMenu.image_url ?? "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80"} alt={selectedMenu.name} fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-graphite-900/80 to-transparent" />
-              <button
-                onClick={() => { setSelected(null); setError(null); }}
-                className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center"
-              >
-                <X size={16} />
-              </button>
+              <button onClick={() => { setSelected(null); setError(null); }}
+                className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center"><X size={16} /></button>
               <div className="absolute bottom-4 left-4">
                 <h2 className="text-xl font-bold text-white">{selectedMenu.name}</h2>
-                <span className="text-terracotta-300 font-bold">${selectedMenu.price.toLocaleString()}</span>
+                <div className="flex items-center gap-2 mt-1">
+                  {(() => {
+                    const { price, discount } = getEffectivePrice(selectedMenu);
+                    return (
+                      <>
+                        {discount > 0 && <span className="text-cream-400 text-sm line-through">${selectedMenu.segmentPrice.toLocaleString("es-AR")}</span>}
+                        <span className="text-terracotta-300 font-bold">${price.toLocaleString("es-AR")}</span>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
-
             <div className="p-6">
               <p className="text-warm-500 text-sm mb-5">{selectedMenu.description}</p>
-
               <p className="text-xs font-semibold text-graphite-700 uppercase tracking-wider mb-3">Extras opcionales</p>
               <div className="flex flex-wrap gap-2 mb-5">
                 {AVAILABLE_EXTRAS.map((extra) => (
-                  <button
-                    key={extra}
-                    onClick={() => toggleExtra(extra)}
+                  <button key={extra} onClick={() => toggleExtra(extra)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      extras.includes(extra)
-                        ? "bg-terracotta-500 text-white"
-                        : "bg-cream-100 text-graphite-600 hover:bg-cream-200 border border-cream-300"
-                    }`}
-                  >
+                      extras.includes(extra) ? "bg-terracotta-500 text-white" : "bg-cream-100 text-graphite-600 hover:bg-cream-200 border border-cream-300"
+                    }`}>
                     {extra}
                   </button>
                 ))}
               </div>
-
               <div className="mb-5">
-                <label className="block text-xs font-semibold text-graphite-700 uppercase tracking-wider mb-2">
-                  Comentario o restricción
-                </label>
-                <textarea
-                  value={nota}
-                  onChange={(e) => setNota(e.target.value)}
-                  rows={2}
-                  className="input-base resize-none text-sm"
-                  placeholder="Sin cebolla, sin picante, etc."
-                />
+                <label className="block text-xs font-semibold text-graphite-700 uppercase tracking-wider mb-2">Comentario o restricción</label>
+                <textarea value={nota} onChange={(e) => setNota(e.target.value)} rows={2}
+                  className="input-base resize-none text-sm" placeholder="Sin cebolla, sin picante, etc." />
               </div>
-
               {error && (
                 <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-sm text-red-700">
-                  <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
-                  {error}
+                  <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />{error}
                 </div>
               )}
-
-              <button
-                onClick={handleConfirm}
-                disabled={isPending}
-                className="w-full flex items-center justify-center gap-2 py-3.5 bg-terracotta-500 text-white font-bold rounded-xl hover:bg-terracotta-600 disabled:opacity-60 transition-all"
-              >
+              <button onClick={handleConfirm} disabled={isPending}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-terracotta-500 text-white font-bold rounded-xl hover:bg-terracotta-600 disabled:opacity-60 transition-all">
                 {isPending
                   ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Confirmando...</>
-                  : <><ShoppingCart size={18} /> Confirmar pedido</>
-                }
+                  : <><ShoppingCart size={18} /> Confirmar pedido</>}
               </button>
             </div>
           </div>
