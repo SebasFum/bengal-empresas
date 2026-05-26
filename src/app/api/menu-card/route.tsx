@@ -3,6 +3,28 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
+// Fallback images per course type
+const FALLBACK: Record<string, string> = {
+  entrada:  "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&q=80",
+  almuerzo: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80",
+  especial: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80",
+  postre:   "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=1200&q=80",
+  default:  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80",
+};
+
+// Category display names & accent colours
+const COURSE_LABEL: Record<string, string> = {
+  entrada:  "Entrada",
+  almuerzo: "Plato Principal",
+  especial: "Plato del día",
+  postre:   "Postre",
+  bebida:   "Bebida",
+};
+const COURSE_COLOR = ["#D4A853", "#C4704F", "#8FBCB0"] as const; // gold · terracotta · sage
+const COURSE_ORDER = ["entrada", "almuerzo", "especial", "postre", "bebida"];
+
+type MenuItem = { name: string; price: number; category: string; image_url: string | null };
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date") ?? new Date().toISOString().split("T")[0];
@@ -11,114 +33,232 @@ export async function GET(request: Request) {
     weekday: "long", day: "numeric", month: "long",
   });
 
-  // Fetch today's menu from Supabase
+  // ── Fetch today's menu ─────────────────────────────────────
   const supabase = await createClient();
   const { data: dailyMenus } = await supabase
     .from("daily_menus")
-    .select("id, stock, orders_count, menus ( name, description, price, category, calories )")
+    .select("menus ( name, price, category, image_url )")
     .eq("date", date)
     .gt("stock", 0);
 
-  const items = (dailyMenus ?? [])
+  let items: MenuItem[] = (dailyMenus ?? [])
     .filter((dm) => dm.menus)
-    .map((dm) => ({
-      name: (dm.menus as { name: string; description: string | null; price: number; category: string; calories: number | null }).name,
-      price: (dm.menus as { price: number }).price,
-      remaining: dm.stock - dm.orders_count,
-    }));
+    .map((dm) => {
+      const m = dm.menus as MenuItem;
+      return { name: m.name, price: m.price, category: m.category, image_url: m.image_url };
+    })
+    .sort((a, b) => {
+      const ai = COURSE_ORDER.indexOf(a.category);
+      const bi = COURSE_ORDER.indexOf(b.category);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    })
+    .slice(0, 3);
+
+  // Pad to exactly 3 if menu isn't configured yet
+  const placeholders: MenuItem[] = [
+    { name: "Entrada del día",        price: 0, category: "entrada",  image_url: null },
+    { name: "Plato principal del día", price: 0, category: "almuerzo", image_url: null },
+    { name: "Postre del día",          price: 0, category: "postre",   image_url: null },
+  ];
+  while (items.length < 3) items.push(placeholders[items.length]);
+
+  // ── Layout constants ───────────────────────────────────────
+  // Header: 120px  |  3 strips: 290px each  |  Footer: 90px  = 1080px
+  const HEADER = 120;
+  const FOOTER = 90;
+  const STRIP  = (1080 - HEADER - FOOTER) / 3; // 290px
 
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: "1080px",
-          height: "1080px",
-          display: "flex",
-          flexDirection: "column",
-          background: "linear-gradient(145deg, #FAF7F2 0%, #F5EDE0 50%, #EDD9C4 100%)",
-          padding: "60px",
-          fontFamily: "Georgia, serif",
-          position: "relative",
-        }}
-      >
-        {/* Decorative top bar */}
-        <div style={{ width: "100%", height: "6px", background: "linear-gradient(90deg, #C4704F, #D4A853)", borderRadius: "3px", marginBottom: "48px", display: "flex" }} />
+      <div style={{
+        width: "1080px",
+        height: "1080px",
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "Georgia, 'Times New Roman', serif",
+        backgroundColor: "#1a1512",
+        overflow: "hidden",
+      }}>
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "40px" }}>
-          <div style={{
-            width: "72px", height: "72px", borderRadius: "50%",
-            background: "#C4704F", display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <span style={{ color: "white", fontSize: "32px", fontWeight: "bold" }}>B</span>
+        {/* ════ HEADER ════ */}
+        <div style={{
+          height: `${HEADER}px`,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 52px",
+          background: "linear-gradient(135deg, #2C2825 0%, #1a1512 100%)",
+          borderBottom: "2px solid #C4704F",
+        }}>
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+            <div style={{
+              width: "62px", height: "62px", borderRadius: "50%",
+              background: "#C4704F",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <span style={{ color: "white", fontSize: "30px", fontWeight: "bold" }}>B</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+              <span style={{ fontSize: "38px", fontWeight: "bold", color: "#FAF7F2", lineHeight: 1 }}>Bengal</span>
+              <span style={{ fontSize: "12px", color: "#D4A853", letterSpacing: "0.22em", textTransform: "uppercase" }}>
+                Catering & Empresas
+              </span>
+            </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: "42px", fontWeight: "bold", color: "#2C2825", lineHeight: 1 }}>Bengal</span>
-            <span style={{ fontSize: "18px", color: "#8B7355", letterSpacing: "0.12em", textTransform: "uppercase" }}>Catering & Empresas</span>
+          {/* Date */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+            <span style={{ fontSize: "20px", color: "#FAF7F2", fontWeight: "600" }}>Menú del día</span>
+            <span style={{ fontSize: "15px", color: "#A89E93", textTransform: "capitalize" }}>{todayLabel}</span>
           </div>
         </div>
 
-        {/* Date */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "36px" }}>
-          <div style={{ width: "4px", height: "28px", background: "#C4704F", borderRadius: "2px", display: "flex" }} />
-          <span style={{ fontSize: "26px", color: "#5C4A3A", fontWeight: "600", textTransform: "capitalize" }}>
-            Menú del {todayLabel}
+        {/* ════ 3 COURSE STRIPS ════ */}
+        {items.map((item, i) => {
+          const label = COURSE_LABEL[item.category] ?? ["Entrada", "Plato Principal", "Postre"][i];
+          const color = COURSE_COLOR[i];
+          const imgSrc = item.image_url ?? FALLBACK[item.category] ?? FALLBACK.default;
+
+          return (
+            <div key={i} style={{
+              height: `${STRIP}px`,
+              flexShrink: 0,
+              position: "relative",
+              display: "flex",
+              overflow: "hidden",
+            }}>
+              {/* ── Food photo (full bleed) ── */}
+              <img
+                src={imgSrc}
+                style={{
+                  position: "absolute",
+                  top: 0, left: 0,
+                  width: "100%", height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center",
+                }}
+              />
+
+              {/* ── Gradient overlay: opaque-left → transparent-right ── */}
+              <div style={{
+                position: "absolute",
+                top: 0, left: 0, right: 0, bottom: 0,
+                background:
+                  "linear-gradient(to right, rgba(15,10,6,0.92) 0%, rgba(15,10,6,0.72) 38%, rgba(15,10,6,0.28) 70%, rgba(15,10,6,0.0) 100%)",
+                display: "flex",
+              }} />
+
+              {/* ── Text (left column) ── */}
+              <div style={{
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                padding: "0 52px",
+                gap: "10px",
+                maxWidth: "62%",
+              }}>
+                {/* Course tag */}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "3px", height: "22px",
+                    background: color,
+                    borderRadius: "2px",
+                    display: "flex", flexShrink: 0,
+                  }} />
+                  <span style={{
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                    letterSpacing: "0.24em",
+                    textTransform: "uppercase",
+                    color,
+                  }}>
+                    {label}
+                  </span>
+                </div>
+
+                {/* Dish name */}
+                <span style={{
+                  fontSize: "36px",
+                  fontWeight: "bold",
+                  color: "#FAF7F2",
+                  lineHeight: 1.18,
+                }}>
+                  {item.name}
+                </span>
+
+                {/* Price */}
+                {item.price > 0 && (
+                  <span style={{
+                    fontSize: "22px",
+                    color: "rgba(250,247,242,0.55)",
+                  }}>
+                    ${item.price.toLocaleString("es-AR")}
+                  </span>
+                )}
+              </div>
+
+              {/* ── Numbered badge (right) ── */}
+              <div style={{
+                position: "absolute",
+                right: "44px",
+                top: 0, bottom: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <div style={{
+                  width: "58px", height: "58px",
+                  borderRadius: "50%",
+                  border: `2px solid ${color}`,
+                  background: "rgba(0,0,0,0.45)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color,
+                  fontSize: "28px",
+                  fontWeight: "bold",
+                }}>
+                  {i + 1}
+                </div>
+              </div>
+
+              {/* ── Thin separator (between strips) ── */}
+              {i < 2 && (
+                <div style={{
+                  position: "absolute",
+                  bottom: 0, left: 0, right: 0,
+                  height: "1px",
+                  background: "rgba(255,255,255,0.10)",
+                  display: "flex",
+                }} />
+              )}
+            </div>
+          );
+        })}
+
+        {/* ════ FOOTER ════ */}
+        <div style={{
+          height: `${FOOTER}px`,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 52px",
+          background: "linear-gradient(135deg, #1a1512 0%, #2C2825 100%)",
+          borderTop: "1px solid rgba(196,112,79,0.35)",
+        }}>
+          <span style={{ fontSize: "16px", color: "#7A6E65" }}>
+            📲 Pedidos hasta las 10:00 hs
+          </span>
+          <span style={{ fontSize: "20px", color: "#D4A853", fontWeight: "600", letterSpacing: "0.04em" }}>
+            @bengal.catering
           </span>
         </div>
 
-        {/* Divider */}
-        <div style={{ height: "1px", background: "rgba(196,112,79,0.3)", marginBottom: "36px", display: "flex" }} />
-
-        {/* Menu items */}
-        {items.length === 0 ? (
-          <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: "28px", color: "#A89E93" }}>Menú próximamente</span>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px", flex: 1 }}>
-            {items.slice(0, 6).map((item, i) => (
-              <div key={i} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                background: "rgba(255,255,255,0.65)", borderRadius: "16px",
-                padding: "20px 28px", border: "1px solid rgba(196,112,79,0.15)",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <div style={{
-                    width: "40px", height: "40px", borderRadius: "50%",
-                    background: i % 2 === 0 ? "#C4704F" : "#D4A853",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "white", fontSize: "18px", fontWeight: "bold", flexShrink: 0,
-                  }}>
-                    {i + 1}
-                  </div>
-                  <span style={{ fontSize: "26px", color: "#2C2825", fontWeight: "600" }}>{item.name}</span>
-                </div>
-                <span style={{ fontSize: "26px", color: "#C4704F", fontWeight: "bold" }}>
-                  ${item.price.toLocaleString("es-AR")}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Footer */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "36px" }}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: "18px", color: "#8B7355" }}>📲 Pedidos hasta las 10:00 hs</span>
-            <span style={{ fontSize: "18px", color: "#8B7355" }}>✉️ @bengal.catering</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-            <span style={{ fontSize: "16px", color: "#A89E93" }}>bengal.com.ar</span>
-          </div>
-        </div>
-
-        {/* Bottom bar */}
-        <div style={{ width: "100%", height: "6px", background: "linear-gradient(90deg, #D4A853, #C4704F)", borderRadius: "3px", marginTop: "32px", display: "flex" }} />
       </div>
     ),
-    {
-      width: 1080,
-      height: 1080,
-    }
+    { width: 1080, height: 1080 },
   );
 }
