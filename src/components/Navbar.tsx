@@ -45,7 +45,7 @@ export default function Navbar() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
           ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-cream-200"
-          : "bg-transparent"
+          : "bg-gradient-to-b from-black/40 to-transparent"
       }`}
     >
       <div className="container-xl">
@@ -56,10 +56,10 @@ export default function Navbar() {
               <span className="text-white text-xs font-bold" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>B</span>
             </div>
             <span
-              className={`text-xl font-semibold tracking-tight transition-colors ${scrolled ? "text-graphite-800" : "text-graphite-800"}`}
+              className={`text-xl font-semibold tracking-tight transition-colors ${scrolled ? "text-graphite-800" : "text-white drop-shadow-sm"}`}
               style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
             >
-              Bengal <span className="text-terracotta-500">Empresas</span>
+              Bengal <span className={scrolled ? "text-terracotta-500" : "text-terracotta-300"}>Empresas</span>
             </span>
           </Link>
 
@@ -69,8 +69,10 @@ export default function Navbar() {
               link.children ? (
                 <div key={link.label} className="relative">
                   <button
-                    className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-cream-200 hover:text-terracotta-600 ${
-                      scrolled ? "text-graphite-700" : "text-graphite-700"
+                    className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      scrolled
+                        ? "text-graphite-700 hover:bg-cream-200 hover:text-terracotta-600"
+                        : "text-white/90 hover:text-white hover:bg-white/15 drop-shadow-sm"
                     }`}
                     onMouseEnter={() => setDropdown(link.label)}
                     onMouseLeave={() => setDropdown(null)}
@@ -100,10 +102,12 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-cream-200 hover:text-terracotta-600 ${
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     pathname === link.href
-                      ? "text-terracotta-600 bg-terracotta-50"
-                      : scrolled ? "text-graphite-700" : "text-graphite-700"
+                      ? scrolled ? "text-terracotta-600 bg-terracotta-50" : "text-white bg-white/20"
+                      : scrolled
+                        ? "text-graphite-700 hover:bg-cream-200 hover:text-terracotta-600"
+                        : "text-white/90 hover:text-white hover:bg-white/15 drop-shadow-sm"
                   }`}
                 >
                   {link.label}
@@ -116,7 +120,9 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-3">
             <Link
               href="/login"
-              className="text-sm font-medium text-graphite-700 hover:text-terracotta-600 transition-colors px-3 py-2"
+              className={`text-sm font-medium transition-colors px-3 py-2 ${
+                scrolled ? "text-graphite-700 hover:text-terracotta-600" : "text-white/90 hover:text-white drop-shadow-sm"
+              }`}
             >
               Ingresar
             </Link>
@@ -131,7 +137,9 @@ export default function Navbar() {
           {/* Mobile toggle */}
           <button
             onClick={() => setOpen(!open)}
-            className="lg:hidden p-2 rounded-lg text-graphite-700 hover:bg-cream-200 transition-colors"
+            className={`lg:hidden p-2 rounded-lg transition-colors ${
+              scrolled ? "text-graphite-700 hover:bg-cream-200" : "text-white hover:bg-white/15"
+            }`}
           >
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>

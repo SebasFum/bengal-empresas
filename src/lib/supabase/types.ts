@@ -53,16 +53,22 @@ export interface Database {
           id: string; name: string; description: string | null; category: string;
           price: number; calories: number | null; tags: string[];
           image_url: string | null; active: boolean; created_at: string;
+          protein: number | null; carbs: number | null; fat: number | null;
+          vitamins: string[];
         };
         Insert: {
           id?: string; name: string; description?: string | null; category: string;
           price: number; calories?: number | null; tags?: string[];
           image_url?: string | null; active?: boolean; created_at?: string;
+          protein?: number | null; carbs?: number | null; fat?: number | null;
+          vitamins?: string[];
         };
         Update: {
           id?: string; name?: string; description?: string | null; category?: string;
           price?: number; calories?: number | null; tags?: string[];
           image_url?: string | null; active?: boolean; created_at?: string;
+          protein?: number | null; carbs?: number | null; fat?: number | null;
+          vitamins?: string[];
         };
         Relationships: [];
       };

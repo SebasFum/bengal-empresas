@@ -48,7 +48,9 @@ export type CompanyRow = {
 };
 export type MenuRow = {
   id: string; name: string; description: string | null; category: string;
-  price: number; calories: number | null; tags: string[]; image_url: string | null; active: boolean;
+  price: number; calories: number | null; protein: number | null;
+  carbs: number | null; fat: number | null; vitamins: string[];
+  tags: string[]; image_url: string | null; active: boolean;
 };
 export type IngredientRow = {
   id: string; name: string; unit: string; current_stock: number;
@@ -408,7 +410,7 @@ function MenuDelDia({ dailyMenus, allMenus, today, todayLabel, onUpdate }: {
 // ═══════════════════════════════════════════════════════════════
 // Sub-component: Catálogo de menús (CRUD)
 // ═══════════════════════════════════════════════════════════════
-const EMPTY_MENU = { name: "", description: "", category: "almuerzo", price: 0, calories: 0, tags: "", image_url: "", active: true };
+const EMPTY_MENU = { name: "", description: "", category: "almuerzo", price: 0, calories: 0, protein: 0, carbs: 0, fat: 0, vitamins: "", tags: "", image_url: "", active: true };
 
 function Catalogo({ menus, onUpdate }: { menus: MenuRow[]; onUpdate: Dispatch<SetStateAction<MenuRow[]>> }) {
   const [showForm, setShowForm] = useState(false);
@@ -420,7 +422,13 @@ function Catalogo({ menus, onUpdate }: { menus: MenuRow[]; onUpdate: Dispatch<Se
   const openCreate = () => { setEditId(null); setForm(EMPTY_MENU); setFeedback(null); setShowForm(true); };
   const openEdit = (m: MenuRow) => {
     setEditId(m.id);
-    setForm({ name: m.name, description: m.description ?? "", category: m.category, price: m.price, calories: m.calories ?? 0, tags: m.tags.join(", "), image_url: m.image_url ?? "", active: m.active });
+    setForm({
+      name: m.name, description: m.description ?? "", category: m.category,
+      price: m.price, calories: m.calories ?? 0,
+      protein: m.protein ?? 0, carbs: m.carbs ?? 0, fat: m.fat ?? 0,
+      vitamins: m.vitamins.join(", "), tags: m.tags.join(", "),
+      image_url: m.image_url ?? "", active: m.active,
+    });
     setFeedback(null); setShowForm(true);
   };
 
@@ -432,6 +440,10 @@ function Catalogo({ menus, onUpdate }: { menus: MenuRow[]; onUpdate: Dispatch<Se
         id: editId ?? undefined,
         name: form.name, description: form.description, category: form.category,
         price: Number(form.price), calories: Number(form.calories) || undefined,
+        protein: Number(form.protein) || undefined,
+        carbs: Number(form.carbs) || undefined,
+        fat: Number(form.fat) || undefined,
+        vitamins: form.vitamins ? form.vitamins.split(",").map((v) => v.trim()).filter(Boolean) : [],
         tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
         image_url: form.image_url || undefined, active: form.active,
       });
@@ -514,6 +526,28 @@ function Catalogo({ menus, onUpdate }: { menus: MenuRow[]; onUpdate: Dispatch<Se
                 <div>
                   <label className="label-xs">Tags (separados por coma)</label>
                   <input className="input-base" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="vegano, sin gluten" />
+                </div>
+                {/* Macros */}
+                <div className="col-span-2 pt-1">
+                  <p className="label-xs mb-2 text-blue-600">Macronutrientes (g por porción)</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="label-xs">Proteínas (g)</label>
+                      <input type="number" className="input-base" value={form.protein || ""} onChange={(e) => setForm({ ...form, protein: Number(e.target.value) })} placeholder="28" />
+                    </div>
+                    <div>
+                      <label className="label-xs">Carbohidratos (g)</label>
+                      <input type="number" className="input-base" value={form.carbs || ""} onChange={(e) => setForm({ ...form, carbs: Number(e.target.value) })} placeholder="45" />
+                    </div>
+                    <div>
+                      <label className="label-xs">Grasas (g)</label>
+                      <input type="number" className="input-base" value={form.fat || ""} onChange={(e) => setForm({ ...form, fat: Number(e.target.value) })} placeholder="12" />
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <label className="label-xs">Vitaminas y minerales destacados (separados por coma)</label>
+                  <input className="input-base" value={form.vitamins} onChange={(e) => setForm({ ...form, vitamins: e.target.value })} placeholder="Vitamina C, Hierro, Calcio, Vitamina B12" />
                 </div>
                 <div className="col-span-2">
                   <label className="label-xs">Descripción</label>

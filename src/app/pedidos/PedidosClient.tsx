@@ -259,7 +259,61 @@ export default function PedidosClient({
               </div>
             </div>
             <div className="p-6">
-              <p className="text-warm-500 text-sm mb-5">{selectedMenu.description}</p>
+              <p className="text-warm-500 text-sm mb-4">{selectedMenu.description}</p>
+
+              {/* Información nutricional */}
+              {(selectedMenu.calories || selectedMenu.protein || selectedMenu.carbs || selectedMenu.fat) && (
+                <div className="bg-cream-50 border border-cream-200 rounded-xl p-4 mb-4">
+                  <p className="text-xs font-semibold text-graphite-600 uppercase tracking-wider mb-3">Información nutricional</p>
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {[
+                      { label: "Calorías", value: selectedMenu.calories, unit: "kcal", color: "text-terracotta-600" },
+                      { label: "Proteínas", value: selectedMenu.protein, unit: "g", color: "text-blue-600" },
+                      { label: "Carbos", value: selectedMenu.carbs, unit: "g", color: "text-amber-600" },
+                      { label: "Grasas", value: selectedMenu.fat, unit: "g", color: "text-green-600" },
+                    ].map((n) => n.value != null && (
+                      <div key={n.label} className="text-center bg-white rounded-lg py-2 px-1 border border-cream-200">
+                        <p className={`font-bold text-sm ${n.color}`}>{n.value}<span className="text-xs font-normal text-warm-400 ml-0.5">{n.unit}</span></p>
+                        <p className="text-xs text-warm-400 mt-0.5">{n.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Macros bar */}
+                  {selectedMenu.protein && selectedMenu.carbs && selectedMenu.fat && (() => {
+                    const total = selectedMenu.protein * 4 + selectedMenu.carbs * 4 + selectedMenu.fat * 9;
+                    const pProt = total > 0 ? Math.round((selectedMenu.protein * 4 / total) * 100) : 0;
+                    const pCarb = total > 0 ? Math.round((selectedMenu.carbs * 4 / total) * 100) : 0;
+                    const pFat  = 100 - pProt - pCarb;
+                    return (
+                      <div>
+                        <div className="flex rounded-full overflow-hidden h-2 mb-1.5">
+                          <div className="bg-blue-400 transition-all"   style={{ width: `${pProt}%` }} />
+                          <div className="bg-amber-400 transition-all"  style={{ width: `${pCarb}%` }} />
+                          <div className="bg-green-400 transition-all"  style={{ width: `${pFat}%` }} />
+                        </div>
+                        <div className="flex gap-3 justify-center">
+                          {[["bg-blue-400","Prot.",pProt],["bg-amber-400","Carbs",pCarb],["bg-green-400","Grasas",pFat]].map(([c,l,v]) => (
+                            <span key={String(l)} className="flex items-center gap-1 text-xs text-warm-400">
+                              <span className={`w-2 h-2 rounded-full ${c}`} />{l} {v}%
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  {/* Vitamins */}
+                  {selectedMenu.vitamins.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {selectedMenu.vitamins.map((v) => (
+                        <span key={v} className="px-2.5 py-1 bg-terracotta-50 text-terracotta-700 text-xs font-medium rounded-full border border-terracotta-100">
+                          {v}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <p className="text-xs font-semibold text-graphite-700 uppercase tracking-wider mb-3">Extras opcionales</p>
               <div className="flex flex-wrap gap-2 mb-5">
                 {AVAILABLE_EXTRAS.map((extra) => (

@@ -44,7 +44,7 @@ export default async function PanelAdminPage() {
       .select("id, name, contact_email, active, delivery_time, budget_per_person")
       .order("name"),
     supabase.from("menus")
-      .select("id, name, description, category, price, calories, tags, image_url, active")
+      .select("id, name, description, category, price, calories, protein, carbs, fat, vitamins, tags, image_url, active")
       .order("name"),
     supabase.from("ingredients")
       .select("id, name, unit, current_stock, cost_per_unit, min_stock_alert")

@@ -58,6 +58,10 @@ export type MenuInput = {
   category: string;
   price: number;
   calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  vitamins?: string[];
   tags: string[];
   image_url?: string;
   active: boolean;
@@ -74,6 +78,10 @@ export async function upsertMenu(data: MenuInput): Promise<ActionResult & { id?:
     category: data.category,
     price: data.price,
     calories: data.calories || null,
+    protein: data.protein || null,
+    carbs: data.carbs || null,
+    fat: data.fat || null,
+    vitamins: data.vitamins ?? [],
     tags: data.tags,
     image_url: data.image_url || null,
     active: data.active,

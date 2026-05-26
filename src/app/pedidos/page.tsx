@@ -14,6 +14,10 @@ export type MenuItem = {
   basePrice: number;
   segmentPrice: number;   // precio efectivo para este usuario
   calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
+  vitamins: string[];
   tags: string[];
   image_url: string | null;
 };
@@ -39,7 +43,7 @@ export default async function PedidosPage() {
   // Intentar obtener menú del día
   const { data: dailyMenus } = await supabase
     .from("daily_menus")
-    .select("id, date, stock, orders_count, menus ( id, name, description, category, price, calories, tags, image_url )")
+    .select("id, date, stock, orders_count, menus ( id, name, description, category, price, calories, protein, carbs, fat, vitamins, tags, image_url )")
     .eq("date", today)
     .gt("stock", 0);
 
@@ -68,20 +72,23 @@ export default async function PedidosPage() {
         const m = dm.menus as {
           id: string; name: string; description: string | null;
           category: string; price: number; calories: number | null;
-          tags: string[]; image_url: string | null;
+          protein: number | null; carbs: number | null; fat: number | null;
+          vitamins: string[]; tags: string[]; image_url: string | null;
         };
         return {
           dailyMenuId: dm.id, stock: dm.stock, ordersCount: dm.orders_count,
           id: m.id, name: m.name, description: m.description,
           category: m.category, basePrice: m.price,
           segmentPrice: priceMap[m.id] ?? m.price,
-          calories: m.calories, tags: m.tags, image_url: m.image_url,
+          calories: m.calories, protein: m.protein, carbs: m.carbs,
+          fat: m.fat, vitamins: m.vitamins ?? [],
+          tags: m.tags, image_url: m.image_url,
         };
       });
   } else {
     // Fallback: todos los menús activos
     const { data: allMenus } = await supabase
-      .from("menus").select("id, name, description, category, price, calories, tags, image_url").eq("active", true);
+      .from("menus").select("id, name, description, category, price, calories, protein, carbs, fat, vitamins, tags, image_url").eq("active", true);
 
     const allIds = (allMenus ?? []).map((m) => m.id);
     const { data: fallbackPrices } = allIds.length > 0
@@ -94,7 +101,9 @@ export default async function PedidosPage() {
       id: m.id, name: m.name, description: m.description,
       category: m.category, basePrice: m.price,
       segmentPrice: fallbackMap[m.id] ?? m.price,
-      calories: m.calories, tags: m.tags, image_url: m.image_url,
+      calories: m.calories, protein: m.protein, carbs: m.carbs,
+      fat: m.fat, vitamins: m.vitamins ?? [],
+      tags: m.tags, image_url: m.image_url,
     }));
   }
 
