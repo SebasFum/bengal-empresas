@@ -177,3 +177,19 @@
 }
 @media (min-width: 640px) { .container-xl { padding-left: 2rem; padding-right: 2rem; } }
 @media (min-width: 1024px) { .container-xl { padding-left: 3rem; padding-right: 3rem; } }
+
+/* ── Utilities ───────────────────────────────────────────────────────────── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* animate-in / fade-in (sin plugin externo) */
+@keyframes animateIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in { animation: animateIn 0.25s ease-out forwards; }
+.fade-in { animation: animateIn 0.25s ease-out forwards; }
+.duration-300 { animation-duration: 0.3s; }
