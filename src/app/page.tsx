@@ -1,14 +1,97 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, CheckCircle, Star, ChevronRight } from "lucide-react";
-import { services, steps, testimonials, companies, menus } from "@/lib/data";
+import { ArrowRight, CheckCircle, Star, ChevronRight, Flame, TrendingUp, CalendarCheck } from "lucide-react";
+import { services, steps, testimonials, companies } from "@/lib/data";
+import CountdownBadge from "@/components/CountdownBadge";
+import SmartBanner from "@/components/SmartBanner";
+import { sql } from "@/lib/db";
 
-export default function HomePage() {
-  const featuredMenus = menus.filter((m) => m.featured).slice(0, 3);
+// ── Tipos ─────────────────────────────────────────────────────────────────────
+type LiveMenuItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  price: number;
+  calories: number | null;
+  tags: string[];
+  image_url: string | null;
+  stock: number | null;
+  orders_count: number | null;
+};
+
+type TimeContext = "early" | "open" | "closed" | "afternoon" | "evening";
+
+function getTimeContext(): TimeContext {
+  // Use BA timezone (UTC-3)
+  const h = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" })).getHours();
+  if (h < 8) return "early";
+  if (h < 10) return "open";
+  if (h < 14) return "closed";
+  if (h < 18) return "afternoon";
+  return "evening";
+}
+
+// ── Fetch server-side via Neon ────────────────────────────────────────────────
+async function getTodayMenus(): Promise<{ items: LiveMenuItem[]; isDaily: boolean }> {
+  const today = new Date().toISOString().split("T")[0];
+
+  try {
+    const rows = await sql`
+      SELECT dm.stock, dm.orders_count,
+             m.id, m.name, m.description, m.category, m.price, m.calories, m.tags, m.image_url
+      FROM daily_menus dm
+      JOIN menus m ON m.id = dm.menu_id
+      WHERE dm.date = ${today} AND dm.stock > 0
+      ORDER BY dm.orders_count DESC
+      LIMIT 3
+    `;
+    if (rows.length > 0) {
+      return {
+        isDaily: true,
+        items: rows.map((r) => ({
+          id: r.id as string, name: r.name as string, description: r.description as string | null,
+          category: r.category as string, price: r.price as number, calories: r.calories as number | null,
+          tags: r.tags as string[], image_url: r.image_url as string | null,
+          stock: r.stock as number, orders_count: r.orders_count as number,
+        })),
+      };
+    }
+  } catch (e) { console.error("[getTodayMenus] daily:", e); }
+
+  try {
+    const rows = await sql`
+      SELECT id, name, description, category, price, calories, tags, image_url
+      FROM menus WHERE active = true AND category = 'almuerzo'
+      ORDER BY name LIMIT 3
+    `;
+    return {
+      isDaily: false,
+      items: rows.map((r) => ({
+        id: r.id as string, name: r.name as string, description: r.description as string | null,
+        category: r.category as string, price: r.price as number, calories: r.calories as number | null,
+        tags: r.tags as string[], image_url: r.image_url as string | null,
+        stock: null, orders_count: null,
+      })),
+    };
+  } catch (e) { console.error("[getTodayMenus] fallback:", e); }
+
+  return { items: [], isDaily: false };
+}
+
+// ── Página ────────────────────────────────────────────────────────────────────
+export default async function HomePage() {
+  const today = new Date();
+  const todayLabel = today.toLocaleDateString("es-AR", {
+    weekday: "long", day: "numeric", month: "long",
+  });
+  const timeCtx = getTimeContext();
+  const { items: liveMenus, isDaily } = await getTodayMenus();
+  const fallback = "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80";
 
   return (
     <>
-      {/* HERO */}
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
@@ -18,7 +101,7 @@ export default function HomePage() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-graphite-900/80 via-graphite-900/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-graphite-900/85 via-graphite-900/55 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-graphite-900/60 via-transparent to-transparent" />
         </div>
 
@@ -45,7 +128,7 @@ export default function HomePage() {
                 href="/menus"
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-terracotta-500 text-white font-semibold rounded-xl hover:bg-terracotta-600 transition-all hover:-translate-y-0.5 shadow-lg"
               >
-                Ver menús de hoy
+                Ver carta completa
                 <ArrowRight size={18} />
               </Link>
               <Link
@@ -82,11 +165,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* LOGOS STRIP */}
+      {/* ── LOGOS STRIP ──────────────────────────────────────────────────── */}
       <section className="bg-cream-200 border-y border-cream-300">
         <div className="container-xl py-6">
           <div className="flex items-center gap-6 overflow-hidden">
-            <span className="text-xs font-semibold text-warm-500 uppercase tracking-wider whitespace-nowrap">
+            <span className="text-xs font-semibold text-warm-500 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
               Confían en Bengal
             </span>
             <div className="flex flex-1 gap-8 overflow-hidden">
@@ -100,7 +183,222 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SERVICIOS */}
+      {/* ── SMART BANNER (solo para usuarios logueados) ──────────────────── */}
+      <SmartBanner />
+
+      {/* ── MENÚ DEL DÍA (datos en vivo) ─────────────────────────────────── */}
+      <section className="section-py bg-graphite-800">
+        <div className="container-xl">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-10">
+            <div>
+              {/* Línea naranja + indicador live */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-px w-10 bg-terracotta-400" />
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-green-400 text-xs font-semibold uppercase tracking-wider">En vivo</span>
+                </div>
+              </div>
+
+              <h2 className="text-4xl md:text-5xl font-bold text-cream-100 capitalize">
+                {isDaily ? "Menú de hoy" : "De nuestra carta"}
+              </h2>
+              <p className="text-warm-400 mt-2 capitalize text-base">{todayLabel}</p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              {/* Countdown badge (client component) */}
+              <CountdownBadge />
+
+              <Link
+                href="/menus"
+                className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-terracotta-400 text-terracotta-400 font-semibold rounded-xl hover:bg-terracotta-500 hover:text-white transition-all whitespace-nowrap text-sm"
+              >
+                Ver carta completa <ArrowRight size={15} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Grilla de platos */}
+          {liveMenus.length === 0 ? (
+            <div className="text-center py-16 bg-graphite-700 rounded-2xl border border-graphite-600">
+              <p className="text-3xl mb-3">🍽️</p>
+              <p className="text-warm-400 text-base">El menú del día se publica cada mañana.</p>
+              <Link href="/menus" className="mt-4 inline-flex items-center gap-1.5 text-terracotta-400 font-semibold text-sm hover:text-terracotta-300">
+                Ver la carta completa <ArrowRight size={14} />
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {liveMenus.map((menu) => (
+                <div
+                  key={menu.id}
+                  className="group bg-graphite-700 rounded-2xl overflow-hidden border border-graphite-600 hover:border-terracotta-500/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-warm-md"
+                >
+                  {/* Imagen */}
+                  <div className="relative h-52 overflow-hidden">
+                    <Image
+                      src={menu.image_url ?? fallback}
+                      alt={menu.name}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-graphite-900/60 to-transparent" />
+
+                    {/* Tags */}
+                    <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
+                      {isDaily && (
+                        <span className="px-2.5 py-1 bg-green-500/90 text-white text-[10px] font-bold rounded-full">
+                          HOY
+                        </span>
+                      )}
+                      {isDaily && (menu.orders_count ?? 0) >= 5 && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/90 text-white text-[10px] font-bold rounded-full">
+                          <TrendingUp size={9} /> {menu.orders_count} pedidos
+                        </span>
+                      )}
+                      {(menu.tags ?? []).slice(0, 1).map((tag) => (
+                        <span key={tag} className="px-2.5 py-1 bg-terracotta-500/80 text-white text-[10px] font-medium rounded-full">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Stock bajo o trending sin daily */}
+                    {isDaily && menu.stock !== null && menu.stock <= 10 ? (
+                      <div className="absolute bottom-3 left-3">
+                        <span className="px-2.5 py-1 bg-red-500/90 text-white text-[10px] font-bold rounded-full animate-pulse">
+                          ⚡ Últimos {menu.stock}
+                        </span>
+                      </div>
+                    ) : isDaily && (menu.orders_count ?? 0) >= 10 ? (
+                      <div className="absolute bottom-3 left-3">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/90 text-white text-[10px] font-bold rounded-full">
+                          🔥 El más pedido hoy
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Contenido */}
+                  <div className="p-5">
+                    <h3 className="text-base font-bold text-cream-100 mb-1.5 leading-snug">
+                      {menu.name}
+                    </h3>
+                    {menu.description && (
+                      <p className="text-warm-400 text-sm leading-relaxed mb-3 line-clamp-2">
+                        {menu.description}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-terracotta-400 font-bold text-lg">
+                          $ {menu.price.toLocaleString("es-AR")}
+                        </span>
+                        {menu.calories && (
+                          <span className="flex items-center gap-0.5 text-warm-500 text-xs mt-0.5">
+                            <Flame size={10} className="text-terracotta-600" /> {menu.calories} kcal
+                          </span>
+                        )}
+                      </div>
+                      <Link
+                        href="/pedidos"
+                        className="px-4 py-2 bg-terracotta-500 text-white text-sm font-semibold rounded-xl hover:bg-terracotta-600 transition-colors"
+                      >
+                        Pedir
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* CTA invitación a registrarse */}
+          <div className="mt-10 bg-graphite-700/60 border border-graphite-600 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-cream-200 font-semibold">¿Ya tenés cuenta?</p>
+              <p className="text-warm-400 text-sm mt-0.5">Ingresá al portal y pedí en menos de 3 clics.</p>
+            </div>
+            <div className="flex gap-3">
+              <Link href="/login" className="px-5 py-2.5 bg-terracotta-500 text-white text-sm font-semibold rounded-xl hover:bg-terracotta-600 transition-colors whitespace-nowrap">
+                Hacer mi pedido
+              </Link>
+              <Link href="/menus" className="px-5 py-2.5 border border-graphite-500 text-warm-300 text-sm font-medium rounded-xl hover:border-terracotta-500 hover:text-terracotta-400 transition-colors whitespace-nowrap">
+                Ver carta
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TIME-AWARE CTA ───────────────────────────────────────────────── */}
+      {timeCtx === "closed" && (
+        <section className="bg-terracotta-500/10 border-y border-terracotta-500/20">
+          <div className="container-xl py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-terracotta-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <CalendarCheck size={16} className="text-terracotta-400" />
+              </div>
+              <div>
+                <p className="text-graphite-700 font-semibold text-sm">Los pedidos de hoy ya cerraron (10:00 hs)</p>
+                <p className="text-warm-500 text-xs mt-0.5">Mañana abrimos a las 8:00 · También podés consultar por eventos corporativos</p>
+              </div>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <Link href="/eventos" className="px-4 py-2 bg-terracotta-500 text-white text-sm font-semibold rounded-xl hover:bg-terracotta-600 transition-colors whitespace-nowrap">
+                Ver eventos
+              </Link>
+              <Link href="/contacto" className="px-4 py-2 border border-terracotta-300 text-terracotta-600 text-sm font-medium rounded-xl hover:bg-terracotta-50 transition-colors whitespace-nowrap">
+                Contactar
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {timeCtx === "afternoon" && (
+        <section className="bg-graphite-800 border-y border-graphite-700">
+          <div className="container-xl py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-terracotta-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <CalendarCheck size={16} className="text-terracotta-400" />
+              </div>
+              <div>
+                <p className="text-cream-200 font-semibold text-sm">¿Pensando en un evento o coffee break?</p>
+                <p className="text-warm-400 text-xs mt-0.5">Cotizamos en 24hs — catering, desayunos y almuerzos ejecutivos para tu empresa</p>
+              </div>
+            </div>
+            <Link href="/eventos" className="flex-shrink-0 px-4 py-2 bg-terracotta-500 text-white text-sm font-semibold rounded-xl hover:bg-terracotta-600 transition-colors whitespace-nowrap">
+              Cotizar evento
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {timeCtx === "evening" && (
+        <section className="bg-graphite-800 border-y border-graphite-700">
+          <div className="container-xl py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-terracotta-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <CalendarCheck size={16} className="text-terracotta-400" />
+              </div>
+              <div>
+                <p className="text-cream-200 font-semibold text-sm">Mañana abrimos los pedidos a las 8:00 hs</p>
+                <p className="text-warm-400 text-xs mt-0.5">Registrate ahora y pedís tu vianda en menos de 3 clics</p>
+              </div>
+            </div>
+            <Link href="/login" className="flex-shrink-0 px-4 py-2 bg-terracotta-500 text-white text-sm font-semibold rounded-xl hover:bg-terracotta-600 transition-colors whitespace-nowrap">
+              Crear cuenta gratis
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ── SERVICIOS ────────────────────────────────────────────────────── */}
       <section className="section-py bg-cream-100">
         <div className="container-xl">
           <div className="text-center mb-14">
@@ -141,68 +439,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* MENÚ DESTACADO */}
-      <section className="section-py bg-graphite-800">
-        <div className="container-xl">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-            <div>
-              <div className="divider-gold mb-4" />
-              <h2 className="text-4xl md:text-5xl font-bold text-cream-100">
-                Menú de esta semana
-              </h2>
-              <p className="text-warm-400 mt-3 text-lg">
-                Variedad, sabor y presentación que hablan solos.
-              </p>
-            </div>
-            <Link
-              href="/menus"
-              className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-terracotta-400 text-terracotta-400 font-semibold rounded-xl hover:bg-terracotta-500 hover:text-white transition-all whitespace-nowrap"
-            >
-              Ver menú completo <ArrowRight size={16} />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredMenus.map((menu) => (
-              <div key={menu.id} className="group bg-graphite-700 rounded-2xl overflow-hidden border border-graphite-600 hover:border-terracotta-500/50 transition-all">
-                <div className="relative h-52 img-zoom">
-                  <Image
-                    src={menu.image}
-                    alt={menu.name}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-graphite-900/60 to-transparent" />
-                  <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
-                    {menu.tags.slice(0, 2).map((tag) => (
-                      <span key={tag} className="px-3 py-1.5 bg-terracotta-500/90 text-white text-xs font-medium rounded-full">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-bold text-cream-100 mb-2">{menu.name}</h3>
-                  <p className="text-warm-400 text-sm leading-relaxed mb-4 line-clamp-2">{menu.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-terracotta-400 font-bold text-lg">
-                      ${menu.price.toLocaleString()}
-                    </span>
-                    <Link
-                      href="/pedidos"
-                      className="px-4 py-2 bg-terracotta-500 text-white text-sm font-semibold rounded-lg hover:bg-terracotta-600 transition-colors"
-                    >
-                      Pedir
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CÓMO FUNCIONA */}
+      {/* ── CÓMO FUNCIONA ────────────────────────────────────────────────── */}
       <section className="section-py bg-cream-100">
         <div className="container-xl">
           <div className="text-center mb-14">
@@ -241,7 +478,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* IMAGEN GRANDE — EVENTOS */}
+      {/* ── IMAGEN GRANDE — EVENTOS ───────────────────────────────────────── */}
       <section className="relative h-96 md:h-[520px] overflow-hidden">
         <Image
           src="https://images.unsplash.com/photo-1555244162-803834f70033?w=1600&q=85"
@@ -271,7 +508,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* ── TESTIMONIALS ─────────────────────────────────────────────────── */}
       <section className="section-py bg-cream-100">
         <div className="container-xl">
           <div className="text-center mb-14">
@@ -307,7 +544,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA FINAL */}
+      {/* ── CTA FINAL ────────────────────────────────────────────────────── */}
       <section className="section-py bg-terracotta-500">
         <div className="container-xl text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">

@@ -1,37 +1,33 @@
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth";
+import { sql } from "@/lib/db";
 import MiCuentaClient from "./MiCuentaClient";
 
 export default async function MiCuentaPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const session = await auth();
+  const userId  = session?.user?.id;
 
-  const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("full_name, phone, dietary_restrictions, role, company_id")
-        .eq("id", user.id)
-        .single()
-    : { data: null };
+  const profileRows = userId ? await sql`
+    SELECT full_name, phone, dietary_restrictions, role, company_id
+    FROM profiles WHERE id = ${userId} LIMIT 1
+  ` : [];
+  const profile = profileRows[0] ?? null;
 
-  const { data: company } = profile?.company_id
-    ? await supabase
-        .from("companies")
-        .select("name, delivery_time, budget_per_person")
-        .eq("id", profile.company_id)
-        .single()
-    : { data: null };
+  const companyRows = profile?.company_id ? await sql`
+    SELECT name, delivery_time FROM companies WHERE id = ${profile.company_id as string} LIMIT 1
+  ` : [];
+  const company = companyRows[0] ?? null;
 
   return (
     <Suspense>
       <MiCuentaClient
-        initialName={profile?.full_name ?? ""}
-        initialPhone={profile?.phone ?? ""}
-        initialRestrictions={profile?.dietary_restrictions ?? []}
-        email={user?.email ?? ""}
-        role={profile?.role ?? "employee"}
-        companyName={company?.name ?? null}
-        deliveryTime={company?.delivery_time ?? null}
+        initialName={(profile?.full_name as string | null) ?? ""}
+        initialPhone={(profile?.phone as string | null) ?? ""}
+        initialRestrictions={(profile?.dietary_restrictions as string[] | null) ?? []}
+        email={session?.user?.email ?? ""}
+        role={(profile?.role as string | null) ?? "empresa"}
+        companyName={(company?.name as string | null) ?? null}
+        deliveryTime={(company?.delivery_time as string | null) ?? null}
       />
     </Suspense>
   );

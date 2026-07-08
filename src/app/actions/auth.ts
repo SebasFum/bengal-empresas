@@ -1,29 +1,36 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { auth, signOut } from "@/lib/auth";
+import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await signOut({ redirectTo: "/login" });
   redirect("/login");
 }
 
 export async function getCurrentUser() {
-  const supabase = await createClient();
+  const session = await auth();
+  if (!session?.user) return null;
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const rows = await sql`
+    SELECT id, full_name, role, company_id, dietary_restrictions, phone
+    FROM profiles
+    WHERE id = ${session.user.id}
+    LIMIT 1
+  `;
+  const profile = rows[0];
+  if (!profile) return null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, full_name, role, company_id, dietary_restrictions, phone")
-    .eq("id", user.id)
-    .single();
-
-  return profile
-    ? { ...profile, email: user.email ?? "" }
-    : null;
+  return {
+    id:                   profile.id as string,
+    full_name:            profile.full_name as string | null,
+    role:                 profile.role as string,
+    company_id:           profile.company_id as string | null,
+    dietary_restrictions: (profile.dietary_restrictions as string[]) ?? [],
+    phone:                profile.phone as string | null,
+    email:                session.user.email ?? "",
+  };
 }
 
 export async function updateProfile(input: {
@@ -31,15 +38,48 @@ export async function updateProfile(input: {
   phone?: string;
   dietary_restrictions?: string[];
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "No autenticado." };
+  const session = await auth();
+  if (!session?.user) return { success: false, error: "No autenticado." };
 
-  const { error } = await supabase
-    .from("profiles")
-    .update(input)
-    .eq("id", user.id);
+  await sql`
+    UPDATE profiles SET
+      full_name            = COALESCE(${input.full_name ?? null}, full_name),
+      phone                = COALESCE(${input.phone ?? null}, phone),
+      dietary_restrictions = COALESCE(${input.dietary_restrictions ?? null}, dietary_restrictions)
+    WHERE id = ${session.user.id}
+  `;
 
-  if (error) return { success: false, error: error.message };
   return { success: true };
+}
+
+export async function registerUser(input: {
+  email: string;
+  password: string;
+  full_name: string;
+  role: string;
+}) {
+  const bcrypt = await import("bcryptjs");
+  const hash   = await bcrypt.hash(input.password, 12);
+
+  try {
+    const rows = await sql`
+      INSERT INTO users (email, password_hash)
+      VALUES (${input.email}, ${hash})
+      RETURNING id
+    `;
+    const userId = rows[0].id as string;
+
+    await sql`
+      INSERT INTO profiles (id, full_name, role, dietary_restrictions)
+      VALUES (${userId}, ${input.full_name}, ${input.role}, '{}')
+    `;
+
+    return { success: true as const, userId };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("unique") || msg.includes("duplicate")) {
+      return { success: false as const, error: "Ya existe una cuenta con ese email." };
+    }
+    return { success: false as const, error: "Error al crear la cuenta." };
+  }
 }

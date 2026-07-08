@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, ArrowRight, Building2, Home, PartyPopper } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { signIn } from "next-auth/react";
+import { registerUser } from "@/app/actions/auth";
 import type { Segment } from "@/lib/supabase/types";
 
 const SEGMENTS: { id: Segment; label: string; desc: string; icon: React.ReactNode }[] = [
@@ -14,15 +15,15 @@ const SEGMENTS: { id: Segment; label: string; desc: string; icon: React.ReactNod
 ];
 
 export default function LoginForm() {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode]       = useState<"login" | "register">("login");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; isInfo?: boolean } | null>(null);
   const [segment, setSegment] = useState<Segment>("empresa");
-  const [form, setForm] = useState({ email: "", password: "", nombre: "" });
-  const router = useRouter();
+  const [form, setForm]       = useState({ email: "", password: "", nombre: "" });
+  const router       = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") ?? "/pedidos";
+  const redirectTo   = searchParams.get("redirect") ?? "/pedidos";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(null);
@@ -33,55 +34,46 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
-    const supabase = createClient();
 
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: form.email, password: form.password,
+      const res = await signIn("credentials", {
+        email:    form.email,
+        password: form.password,
+        redirect: false,
       });
-      if (error) {
-        setMessage({ text: error.message === "Invalid login credentials" ? "Email o contraseña incorrectos." : error.message });
+      if (res?.error) {
+        setMessage({ text: "Email o contraseña incorrectos." });
         setLoading(false);
         return;
       }
       router.push(redirectTo);
       router.refresh();
     } else {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: { data: { full_name: form.nombre } },
+      const result = await registerUser({
+        email:     form.email,
+        password:  form.password,
+        full_name: form.nombre,
+        role:      segment,
       });
-      if (signUpError) {
-        setMessage({ text: signUpError.message });
+      if (!result.success) {
+        setMessage({ text: result.error });
         setLoading(false);
         return;
       }
-      if (data.user) {
-        await supabase.from("profiles").upsert({
-          id: data.user.id,
-          full_name: form.nombre,
-          role: segment,
-          dietary_restrictions: [],
-        });
-      }
-      if (data.session) {
-        router.push(redirectTo);
-        router.refresh();
-      } else {
-        setMessage({ text: "Te enviamos un email de confirmación. Revisá tu bandeja de entrada.", isInfo: true });
+      // Auto-login after register
+      const res = await signIn("credentials", {
+        email:    form.email,
+        password: form.password,
+        redirect: false,
+      });
+      if (res?.error) {
+        setMessage({ text: "Cuenta creada. Ingresá con tus datos.", isInfo: true });
         setLoading(false);
+        return;
       }
+      router.push(redirectTo);
+      router.refresh();
     }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!form.email) { setMessage({ text: "Ingresá tu email primero." }); return; }
-    const supabase = createClient();
-    await supabase.auth.resetPasswordForEmail(form.email, {
-      redirectTo: `${window.location.origin}/login`,
-    });
-    setMessage({ text: "Te enviamos un link para restablecer tu contraseña.", isInfo: true });
   };
 
   return (
@@ -116,7 +108,6 @@ export default function LoginForm() {
         <div className="bg-white rounded-2xl shadow-card border border-cream-200 p-7">
           <form onSubmit={handleSubmit} className="space-y-4">
 
-            {/* Selector de segmento (solo en registro) */}
             {mode === "register" && (
               <>
                 <div>
@@ -158,14 +149,6 @@ export default function LoginForm() {
                 </button>
               </div>
             </div>
-
-            {mode === "login" && (
-              <div className="text-right">
-                <button type="button" onClick={handleForgotPassword} className="text-xs text-terracotta-600 hover:text-terracotta-700 font-medium">
-                  ¿Olvidaste tu contraseña?
-                </button>
-              </div>
-            )}
 
             {message && (
               <div className={`rounded-xl px-4 py-3 text-sm ${message.isInfo ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>

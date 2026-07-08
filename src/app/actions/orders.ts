@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth";
+import { sql } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sendOrderConfirmation } from "@/lib/email";
 import type { Segment } from "@/lib/supabase/types";
@@ -8,7 +9,7 @@ import type { Segment } from "@/lib/supabase/types";
 export type PlaceOrderInput = {
   menu_id: string;
   daily_menu_id?: string;
-  date: string;          // ISO string "2025-01-18"
+  date: string;
   extras: string[];
   notes: string;
   total: number;
@@ -20,143 +21,133 @@ export type ActionResult =
   | { success: false; error: string };
 
 export async function placeOrder(input: PlaceOrderInput): Promise<ActionResult> {
-  const supabase = await createClient();
+  const session = await auth();
+  if (!session?.user) return { success: false, error: "Tenés que iniciar sesión para hacer un pedido." };
+  const userId = session.user.id;
 
-  // Verificar sesión activa
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return { success: false, error: "Tenés que iniciar sesión para hacer un pedido." };
-  }
+  const profileRows = await sql`SELECT company_id FROM profiles WHERE id = ${userId} LIMIT 1`;
+  const companyId   = (profileRows[0]?.company_id as string | null) ?? null;
 
-  // Obtener company_id del perfil
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("company_id")
-    .eq("id", user.id)
-    .single();
+  const orderRows = await sql`
+    INSERT INTO orders (user_id, company_id, menu_id, daily_menu_id, date, status, extras, notes, total, segment)
+    VALUES (
+      ${userId}, ${companyId}, ${input.menu_id},
+      ${input.daily_menu_id ?? null}, ${input.date},
+      'pendiente',
+      ${input.extras}, ${input.notes || null}, ${input.total},
+      ${input.segment ?? null}
+    )
+    RETURNING id
+  `;
+  const order = orderRows[0];
+  if (!order) return { success: false, error: "No se pudo registrar el pedido. Intentá de nuevo." };
 
-  // Insertar el pedido
-  const { data: order, error: insertError } = await supabase
-    .from("orders")
-    .insert({
-      user_id: user.id,
-      company_id: profile?.company_id ?? null,
-      menu_id: input.menu_id,
-      daily_menu_id: input.daily_menu_id ?? null,
-      date: input.date,
-      status: "pendiente",
-      extras: input.extras,
-      notes: input.notes || null,
-      total: input.total,
-      segment: input.segment ?? null,
-    })
-    .select("id")
-    .single();
-
-  if (insertError) {
-    console.error("[placeOrder] insert error:", insertError);
-    return { success: false, error: "No se pudo registrar el pedido. Intentá de nuevo." };
-  }
-
-  // Incrementar orders_count en daily_menus si hay daily_menu_id
   if (input.daily_menu_id) {
-    await supabase.rpc("increment_orders_count", {
-      p_daily_menu_id: input.daily_menu_id,
-    });
+    await sql`
+      UPDATE daily_menus
+      SET orders_count = orders_count + 1
+      WHERE id = ${input.daily_menu_id} AND orders_count < stock
+    `;
   }
 
-  // Email de confirmación — no blocking
-  const { data: menuData } = await supabase
-    .from("menus").select("name, price").eq("id", input.menu_id).single();
+  const menuRows = await sql`SELECT name, price FROM menus WHERE id = ${input.menu_id} LIMIT 1`;
+  const menuData  = menuRows[0];
 
   sendOrderConfirmation({
-    to: user.email ?? "",
-    menuName: menuData?.name ?? "Tu pedido",
-    date: input.date,
-    extras: input.extras,
-    notes: input.notes,
-    total: input.total,
-    orderId: order.id,
+    to:       session.user.email ?? "",
+    menuName: (menuData?.name as string) ?? "Tu pedido",
+    date:     input.date,
+    extras:   input.extras,
+    notes:    input.notes,
+    total:    input.total,
+    orderId:  order.id as string,
   }).catch((e) => console.error("[email]", e));
 
   revalidatePath("/pedidos");
   revalidatePath("/historial");
 
-  return { success: true, orderId: order.id };
+  return { success: true, orderId: order.id as string };
 }
 
 export async function getMyOrders() {
-  const supabase = await createClient();
+  const session = await auth();
+  if (!session?.user) return [];
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  const rows = await sql`
+    SELECT
+      o.id, o.date, o.status, o.extras, o.notes, o.total, o.created_at,
+      m.id AS menu_id, m.name AS menu_name, m.description AS menu_description,
+      m.category AS menu_category, m.price AS menu_price, m.image_url AS menu_image_url
+    FROM orders o
+    JOIN menus m ON m.id = o.menu_id
+    WHERE o.user_id = ${session.user.id}
+    ORDER BY o.created_at DESC
+    LIMIT 50
+  `;
 
-  const { data, error } = await supabase
-    .from("orders")
-    .select(`
-      id,
-      date,
-      status,
-      extras,
-      notes,
-      total,
-      created_at,
-      menus ( id, name, description, category, price, image_url )
-    `)
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  if (error) {
-    console.error("[getMyOrders] error:", error);
-    return [];
-  }
-
-  return data ?? [];
+  return rows.map((r) => ({
+    id:         r.id as string,
+    date:       r.date as string,
+    status:     r.status as string,
+    extras:     r.extras as string[],
+    notes:      r.notes as string | null,
+    total:      r.total as number,
+    created_at: r.created_at as string,
+    menus: {
+      id:          r.menu_id as string,
+      name:        r.menu_name as string,
+      description: r.menu_description as string | null,
+      category:    r.menu_category as string,
+      price:       r.menu_price as number,
+      image_url:   r.menu_image_url as string | null,
+    },
+  }));
 }
 
 export async function cancelOrder(orderId: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const session = await auth();
+  if (!session?.user) return { success: false, error: "No autenticado." };
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "No autenticado." };
-
-  const { error } = await supabase
-    .from("orders")
-    .update({ status: "cancelado" })
-    .eq("id", orderId)
-    .eq("user_id", user.id)           // solo el dueño del pedido
-    .in("status", ["pendiente"]);     // solo si aún no está en producción
-
-  if (error) {
-    return { success: false, error: "No se pudo cancelar el pedido." };
-  }
+  await sql`
+    UPDATE orders
+    SET status = 'cancelado'
+    WHERE id = ${orderId}
+      AND user_id = ${session.user.id}
+      AND status = 'pendiente'
+  `;
 
   revalidatePath("/historial");
   return { success: true, orderId };
 }
 
 export async function getTodayMenus() {
-  const supabase = await createClient();
-
   const today = new Date().toISOString().split("T")[0];
 
-  const { data, error } = await supabase
-    .from("daily_menus")
-    .select(`
-      id,
-      date,
-      stock,
-      orders_count,
-      menus ( id, name, description, category, price, calories, tags, image_url, active )
-    `)
-    .eq("date", today)
-    .gt("stock", 0);
+  const rows = await sql`
+    SELECT
+      dm.id, dm.date, dm.stock, dm.orders_count,
+      m.id AS menu_id, m.name, m.description, m.category, m.price,
+      m.calories, m.tags, m.image_url, m.active
+    FROM daily_menus dm
+    JOIN menus m ON m.id = dm.menu_id
+    WHERE dm.date = ${today} AND dm.stock > 0
+  `;
 
-  if (error) {
-    console.error("[getTodayMenus] error:", error);
-    return [];
-  }
-
-  return data ?? [];
+  return rows.map((r) => ({
+    id:           r.id as string,
+    date:         r.date as string,
+    stock:        r.stock as number,
+    orders_count: r.orders_count as number,
+    menus: {
+      id:          r.menu_id as string,
+      name:        r.name as string,
+      description: r.description as string | null,
+      category:    r.category as string,
+      price:       r.price as number,
+      calories:    r.calories as number | null,
+      tags:        r.tags as string[],
+      image_url:   r.image_url as string | null,
+      active:      r.active as boolean,
+    },
+  }));
 }

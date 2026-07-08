@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth";
+import { sql } from "@/lib/db";
 
 const STATUS_STYLES: Record<string, string> = {
   entregado:     "bg-green-100 text-green-700",
@@ -19,22 +20,24 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default async function HistorialPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const session = await auth();
+  const userId  = session?.user?.id;
 
-  const { data: orders } = user
-    ? await supabase
-        .from("orders")
-        .select(`
-          id, date, status, extras, notes, total, created_at,
-          menus ( id, name, category, price )
-        `)
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(50)
-    : { data: [] };
+  const rows = userId ? await sql`
+    SELECT o.id, o.date::text AS date, o.status, o.extras, o.notes, o.total, o.created_at,
+           m.id AS menu_id, m.name AS menu_name, m.category AS menu_category, m.price AS menu_price
+    FROM orders o
+    JOIN menus m ON m.id = o.menu_id
+    WHERE o.user_id = ${userId}
+    ORDER BY o.created_at DESC LIMIT 50
+  ` : [];
 
-  const safeOrders = orders ?? [];
+  const safeOrders = rows.map((r) => ({
+    id: r.id as string, date: r.date as string, status: r.status as string,
+    extras: r.extras as string[], notes: r.notes as string | null,
+    total: r.total as number, created_at: r.created_at as string,
+    menus: { id: r.menu_id as string, name: r.menu_name as string },
+  }));
 
   // Stats del mes actual
   const now = new Date();

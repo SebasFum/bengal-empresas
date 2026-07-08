@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, ShoppingBag } from "lucide-react";
+import { Menu, X, ChevronDown, ShoppingBag, History, User, UtensilsCrossed } from "lucide-react";
 
 const navLinks = [
   { label: "Viandas", href: "/viandas-corporativas" },
@@ -189,57 +189,95 @@ export default function Navbar() {
   );
 }
 
+// ── Tab inferior para el portal (mobile) ─────────────────────────────────────
+function PortalBottomTab({
+  href, icon, label,
+}: { href: string; icon: React.ReactNode; label: string }) {
+  const pathname = usePathname();
+  const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
+  return (
+    <Link
+      href={href}
+      className={`flex flex-col items-center justify-center gap-0.5 py-2 transition-colors ${
+        active ? "text-terracotta-600" : "text-warm-400 hover:text-graphite-700"
+      }`}
+    >
+      <span className={`transition-transform ${active ? "scale-110" : ""}`}>{icon}</span>
+      <span className={`text-[10px] font-semibold ${active ? "text-terracotta-600" : "text-warm-400"}`}>
+        {label}
+      </span>
+      {active && <span className="absolute bottom-0 w-8 h-0.5 bg-terracotta-500 rounded-full" />}
+    </Link>
+  );
+}
+
 function PortalNav() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
 
   return (
-    <header className="bg-white border-b border-cream-200 sticky top-0 z-50">
-      <div className="container-xl">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-terracotta-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>B</span>
-            </div>
-            <span className="font-semibold text-graphite-800" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>
-              Bengal
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-1">
-            {[
-              { label: "Hacer pedido", href: "/pedidos" },
-              { label: "Mi cuenta", href: "/mi-cuenta" },
-              { label: "Historial", href: "/historial" },
-            ].map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === link.href
-                    ? "bg-terracotta-50 text-terracotta-600"
-                    : "text-graphite-600 hover:bg-cream-100"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link href="/pedidos" className="hidden md:flex items-center gap-2 px-3 py-2 bg-terracotta-500 text-white text-sm font-semibold rounded-lg hover:bg-terracotta-600 transition-colors">
-              <ShoppingBag size={15} />
-              Pedir ahora
+    <>
+      {/* Top bar */}
+      <header className="bg-white border-b border-cream-200 sticky top-0 z-50 shadow-sm">
+        <div className="container-xl">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-terracotta-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs font-bold" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>B</span>
+              </div>
+              <span className="font-semibold text-graphite-800 hidden sm:block" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>
+                Bengal <span className="text-terracotta-500">Empresas</span>
+              </span>
             </Link>
-            <button
-              onClick={() => setOpen(!open)}
-              className="md:hidden p-2 rounded-lg text-graphite-600 hover:bg-cream-100"
+
+            {/* Desktop nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {[
+                { label: "Hacer pedido", href: "/pedidos" },
+                { label: "Historial",    href: "/historial" },
+                { label: "Mi cuenta",    href: "/mi-cuenta" },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    pathname === link.href
+                      ? "bg-terracotta-50 text-terracotta-600"
+                      : "text-graphite-600 hover:bg-cream-100"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Desktop CTA */}
+            <Link
+              href="/pedidos"
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-terracotta-500 text-white text-sm font-semibold rounded-lg hover:bg-terracotta-600 transition-colors"
             >
-              {open ? <X size={20} /> : <Menu size={20} />}
-            </button>
+              <ShoppingBag size={15} /> Pedir ahora
+            </Link>
+
+            {/* Mobile: avatar / link a cuenta */}
+            <Link
+              href="/mi-cuenta"
+              className="md:hidden w-8 h-8 bg-terracotta-100 rounded-full flex items-center justify-center text-terracotta-600"
+            >
+              <User size={16} />
+            </Link>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Bottom tab bar — sólo mobile */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-cream-200 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]">
+        <div className="grid grid-cols-3 relative">
+          <PortalBottomTab href="/pedidos"  icon={<UtensilsCrossed size={20} />} label="Pedir" />
+          <PortalBottomTab href="/historial" icon={<History size={20} />}         label="Historial" />
+          <PortalBottomTab href="/mi-cuenta" icon={<User size={20} />}            label="Mi cuenta" />
+        </div>
+      </nav>
+    </>
   );
 }

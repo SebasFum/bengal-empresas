@@ -1,28 +1,27 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database } from "./types";
+// Reemplazado — Supabase removido. DB → @/lib/db (Neon), Auth → @/lib/auth (Auth.js v5).
+export { auth } from "@/lib/auth";
+export { sql as db } from "@/lib/db";
 
+import { auth } from "@/lib/auth";
+
+export async function getSessionUser() {
+  const session = await auth();
+  if (!session?.user) return null;
+  return {
+    id:         session.user.id,
+    email:      session.user.email ?? "",
+    role:       session.user.role,
+    company_id: session.user.company_id ?? null,
+  };
+}
+
+// Shim de compatibilidad para código no migrado aún
 export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Server Component — the middleware handles session refresh
-          }
-        },
-      },
-    }
-  );
+  const session = await auth();
+  const userId  = session?.user?.id ?? null;
+  return {
+    auth: {
+      getUser: async () => ({ data: { user: userId ? { id: userId, email: session?.user?.email ?? "" } : null }, error: null }),
+    },
+  };
 }

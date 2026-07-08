@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -34,19 +34,14 @@ export async function GET(request: Request) {
   });
 
   // ── Fetch today's menu ─────────────────────────────────────
-  const supabase = await createClient();
-  const { data: dailyMenus } = await supabase
-    .from("daily_menus")
-    .select("menus ( name, price, category, image_url )")
-    .eq("date", date)
-    .gt("stock", 0);
+  const rows = await sql`
+    SELECT m.name, m.price, m.category, m.image_url
+    FROM daily_menus dm JOIN menus m ON m.id = dm.menu_id
+    WHERE dm.date = ${date} AND dm.stock > 0
+  `;
 
-  let items: MenuItem[] = (dailyMenus ?? [])
-    .filter((dm) => dm.menus)
-    .map((dm) => {
-      const m = dm.menus as MenuItem;
-      return { name: m.name, price: m.price, category: m.category, image_url: m.image_url };
-    })
+  let items: MenuItem[] = rows
+    .map((r) => ({ name: r.name as string, price: Number(r.price), category: r.category as string, image_url: r.image_url as string | null }))
     .sort((a, b) => {
       const ai = COURSE_ORDER.indexOf(a.category);
       const bi = COURSE_ORDER.indexOf(b.category);

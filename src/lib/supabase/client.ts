@@ -1,9 +1,5 @@
-import { createBrowserClient } from "@supabase/ssr";
-import type { Database } from "./types";
-
+// Reemplazado — usar useSession() de next-auth/react para el cliente.
+// Este archivo ya no se usa; los imports en componentes client fueron migrados.
 export function createClient() {
-  return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  throw new Error("[Bengal] createClient() no disponible en el cliente. Usá useSession() de next-auth/react.");
 }

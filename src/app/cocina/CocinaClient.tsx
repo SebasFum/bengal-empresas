@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { CheckCircle, Clock, ChefHat, Send, Flame, AlertCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { updateOrderStatus } from "@/app/actions/admin";
 
 type KitchenOrder = {
@@ -42,76 +41,35 @@ export default function CocinaClient({ initialOrders, dispatchedCount, today, st
   const [dispatched, setDispatched] = useState(dispatchedCount);
   const [view, setView] = useState<"grupos" | "lista">("grupos");
   const [newOrderAlert, setNewOrderAlert] = useState(false);
+  const prevOrderIds = useRef(new Set(initialOrders.map((o) => o.id)));
 
   const todayLabel = new Date(today + "T12:00:00").toLocaleDateString("es-AR", {
     weekday: "long", day: "numeric", month: "long",
   });
 
-  // ─── Supabase Realtime subscription ───────────────────────
+  // ─── Polling (cada 12 s) ───────────────────────────────────
   useEffect(() => {
-    const supabase = createClient();
-
-    const channel = supabase
-      .channel("kitchen-orders")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-          filter: `date=eq.${today}`,
-        },
-        async (payload) => {
-          const newRow = payload.new as Record<string, unknown>;
-          const oldRow = payload.old as Record<string, unknown>;
-
-          if (payload.eventType === "INSERT") {
-            // Nuevo pedido → fetch nombre de menú y usuario
-            const { data: menuData } = await supabase
-              .from("menus").select("id, name").eq("id", newRow.menu_id as string).single();
-            const { data: profileData } = await supabase
-              .from("profiles").select("full_name").eq("id", newRow.user_id as string).single();
-
-            if (["pendiente", "en_produccion"].includes(newRow.status as string)) {
-              setOrders((prev) => [...prev, {
-                id: newRow.id as string,
-                status: newRow.status as "pendiente" | "en_produccion",
-                extras: (newRow.extras as string[]) ?? [],
-                notes: newRow.notes as string | null,
-                total: newRow.total as number,
-                created_at: newRow.created_at as string,
-                segment: newRow.segment as string | null,
-                menuId: newRow.menu_id as string,
-                menuName: menuData?.name ?? "—",
-                userName: profileData?.full_name ?? "Cliente",
-              }]);
-              setNewOrderAlert(true);
-              setTimeout(() => setNewOrderAlert(false), 4000);
-            }
-          }
-
-          if (payload.eventType === "UPDATE") {
-            const newStatus = newRow.status as string;
-            if (["en_camino", "entregado"].includes(newStatus)) {
-              // Salió de cocina → quitar de la lista activa
-              setOrders((prev) => prev.filter((o) => o.id !== newRow.id));
-              setDispatched((d) => d + 1);
-            } else {
-              // Actualizar status en la lista
-              setOrders((prev) =>
-                prev.map((o) =>
-                  o.id === newRow.id
-                    ? { ...o, status: newStatus as "pendiente" | "en_produccion" }
-                    : o
-                )
-              );
-            }
-          }
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/kitchen/orders?date=${today}`);
+        if (!res.ok) return;
+        const data = await res.json() as { orders: KitchenOrder[]; dispatchedCount: number };
+        const newIds = new Set(data.orders.map((o) => o.id));
+        const hasNew = data.orders.some((o) => !prevOrderIds.current.has(o.id));
+        prevOrderIds.current = newIds;
+        setOrders(data.orders);
+        setDispatched(data.dispatchedCount);
+        if (hasNew) {
+          setNewOrderAlert(true);
+          setTimeout(() => setNewOrderAlert(false), 4000);
         }
-      )
-      .subscribe();
+      } catch {
+        // silent — cocina sigue funcionando con datos previos
+      }
+    };
 
-    return () => { supabase.removeChannel(channel); };
+    const id = setInterval(poll, 12_000);
+    return () => clearInterval(id);
   }, [today]);
 
   // ─── Acciones ──────────────────────────────────────────────
