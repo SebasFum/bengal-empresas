@@ -40,7 +40,16 @@ const DIETARY_LABELS: Record<string, { label: string; icon: ReactNode }> = {
   vegano: { label: "Vegano", icon: <Leaf size={12} /> },
 };
 
+// El contenido depende 100% de la sesión del usuario: solo tiene sentido en el cliente.
+// Montarlo tras la hidratación evita el error de SSR de useSession sin SessionProvider.
 export default function SmartBanner() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return <SmartBannerInner />;
+}
+
+function SmartBannerInner() {
   const { data: session, status } = useSession();
   const [state, setState] = useState<BannerState>({ type: "loading" });
 

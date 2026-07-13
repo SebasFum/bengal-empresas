@@ -14,7 +14,7 @@ const navLinks = [
     label: "Empresas",
     href: "/empresas",
     children: [
-      { label: "Para empresas", href: "/empresas" },
+      { label: "Soluciones por perfil", href: "/empresas/soluciones" },
       { label: "Degustaciones", href: "/degustaciones" },
       { label: "Preguntas frecuentes", href: "/faq" },
     ],
@@ -38,8 +38,8 @@ export default function Navbar() {
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
-  // La pantalla de cocina es fullscreen con header propio
-  if (pathname?.startsWith("/cocina")) return null;
+  // Pantallas con chrome propio: cocina (fullscreen) y las páginas de marca (portada y delivery)
+  if (pathname?.startsWith("/cocina") || pathname === "/" || pathname?.startsWith("/delivery")) return null;
 
   if (isPortal) return <PortalNav />;
 
