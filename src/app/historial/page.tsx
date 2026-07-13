@@ -19,6 +19,26 @@ const STATUS_LABELS: Record<string, string> = {
   cancelado:     "Cancelado",
 };
 
+const STATUS_FLOW = ["pendiente", "en_produccion", "en_camino", "entregado"] as const;
+const STEP_LABELS = ["Recibido", "En cocina", "En camino", "Entregado"];
+
+function OrderTimeline({ status }: { status: string }) {
+  const idx = STATUS_FLOW.indexOf(status as typeof STATUS_FLOW[number]);
+  if (idx < 0) return null; // cancelado u otro estado
+  return (
+    <div className="flex items-center gap-1.5 mt-3">
+      {STATUS_FLOW.map((step, i) => (
+        <div key={step} className="flex-1 min-w-0">
+          <div className={`h-1.5 rounded-full ${i <= idx ? "bg-terracotta-500" : "bg-cream-200"}`} />
+          <p className={`text-[10px] mt-1 truncate ${i === idx ? "font-bold text-terracotta-600" : i < idx ? "text-warm-400" : "text-warm-300"}`}>
+            {STEP_LABELS[i]}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default async function HistorialPage() {
   const session = await auth();
   const userId  = session?.user?.id;
@@ -104,29 +124,37 @@ export default async function HistorialPage() {
                 const dateLabel = new Date(order.date + "T12:00:00").toLocaleDateString("es-AR", {
                   weekday: "short", day: "numeric", month: "short",
                 });
+                const isActive = ["pendiente", "en_produccion", "en_camino"].includes(order.status);
                 return (
-                  <div key={order.id} className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 gap-3 hover:bg-cream-50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-terracotta-50 rounded-xl flex items-center justify-center text-terracotta-600 text-xs font-bold flex-shrink-0">
-                        {order.id.slice(-4).toUpperCase()}
+                  <div key={order.id} className="px-6 py-4 hover:bg-cream-50 transition-colors">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-terracotta-50 rounded-xl flex items-center justify-center text-terracotta-600 text-xs font-bold flex-shrink-0">
+                          {order.id.slice(-4).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-graphite-800 text-sm">{menu?.name ?? "Menú"}</p>
+                          <p className="text-warm-400 text-xs capitalize">{dateLabel}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-graphite-800 text-sm">{menu?.name ?? "Menú"}</p>
-                        <p className="text-warm-400 text-xs capitalize">{dateLabel}</p>
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${STATUS_STYLES[order.status] ?? "bg-gray-100 text-gray-600"}`}>
+                          {STATUS_LABELS[order.status] ?? order.status}
+                        </span>
+                        <span className="font-bold text-graphite-800 text-sm">${order.total.toLocaleString("es-AR")}</span>
+                        <Link
+                          href="/pedidos"
+                          className="inline-flex items-center gap-1 text-xs text-terracotta-600 font-semibold hover:text-terracotta-700 transition-colors"
+                        >
+                          <RefreshCw size={11} /> Repetir
+                        </Link>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 flex-wrap">
-                      <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${STATUS_STYLES[order.status] ?? "bg-gray-100 text-gray-600"}`}>
-                        {STATUS_LABELS[order.status] ?? order.status}
-                      </span>
-                      <span className="font-bold text-graphite-800 text-sm">${order.total.toLocaleString("es-AR")}</span>
-                      <Link
-                        href="/pedidos"
-                        className="inline-flex items-center gap-1 text-xs text-terracotta-600 font-semibold hover:text-terracotta-700 transition-colors"
-                      >
-                        <RefreshCw size={11} /> Repetir
-                      </Link>
-                    </div>
+                    {isActive && (
+                      <div className="md:pl-14 max-w-md">
+                        <OrderTimeline status={order.status} />
+                      </div>
+                    )}
                   </div>
                 );
               })}

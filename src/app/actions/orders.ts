@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { sendOrderConfirmation } from "@/lib/email";
+import { sendOrderConfirmation, sendNewOrderAlert } from "@/lib/email";
 import type { Segment } from "@/lib/supabase/types";
 
 export type PlaceOrderInput = {
@@ -25,8 +25,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<ActionResult> 
   if (!session?.user) return { success: false, error: "Tenés que iniciar sesión para hacer un pedido." };
   const userId = session.user.id;
 
-  const profileRows = await sql`SELECT company_id FROM profiles WHERE id = ${userId} LIMIT 1`;
+  const profileRows = await sql`SELECT company_id, full_name FROM profiles WHERE id = ${userId} LIMIT 1`;
   const companyId   = (profileRows[0]?.company_id as string | null) ?? null;
+  const clientName  = (profileRows[0]?.full_name as string | null) ?? session.user.email ?? "Cliente";
 
   const orderRows = await sql`
     INSERT INTO orders (user_id, company_id, menu_id, daily_menu_id, date, status, extras, notes, total, segment)
@@ -62,6 +63,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<ActionResult> 
     total:    input.total,
     orderId:  order.id as string,
   }).catch((e) => console.error("[email]", e));
+
+  sendNewOrderAlert({
+    menuName:   (menuData?.name as string) ?? "Pedido",
+    clientName,
+    date:       input.date,
+    extras:     input.extras,
+    notes:      input.notes,
+    total:      input.total,
+    segment:    input.segment ?? null,
+    orderId:    order.id as string,
+  }).catch((e) => console.error("[email alerta]", e));
 
   revalidatePath("/pedidos");
   revalidatePath("/historial");

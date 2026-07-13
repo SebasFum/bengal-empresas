@@ -1,8 +1,31 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { CheckCircle, Clock, ChefHat, Send, Flame, AlertCircle } from "lucide-react";
+import { CheckCircle, Clock, ChefHat, Send, Flame, AlertCircle, Volume2, VolumeX } from "lucide-react";
 import { updateOrderStatus } from "@/app/actions/admin";
+
+// Campana de cocina sintetizada — no requiere archivo de audio
+function playKitchenBell() {
+  try {
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new Ctx();
+    [0, 0.18, 0.36].forEach((delay, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = i === 2 ? 1175 : 880; // dos tonos + remate más agudo
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.25);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.3);
+    });
+    setTimeout(() => ctx.close(), 1200);
+  } catch {
+    // audio bloqueado por el navegador — el cartel visual sigue funcionando
+  }
+}
 
 type KitchenOrder = {
   id: string;
@@ -41,6 +64,9 @@ export default function CocinaClient({ initialOrders, dispatchedCount, today, st
   const [dispatched, setDispatched] = useState(dispatchedCount);
   const [view, setView] = useState<"grupos" | "lista">("grupos");
   const [newOrderAlert, setNewOrderAlert] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const soundOnRef = useRef(true);
+  soundOnRef.current = soundOn;
   const prevOrderIds = useRef(new Set(initialOrders.map((o) => o.id)));
 
   const todayLabel = new Date(today + "T12:00:00").toLocaleDateString("es-AR", {
@@ -61,6 +87,7 @@ export default function CocinaClient({ initialOrders, dispatchedCount, today, st
         setDispatched(data.dispatchedCount);
         if (hasNew) {
           setNewOrderAlert(true);
+          if (soundOnRef.current) playKitchenBell();
           setTimeout(() => setNewOrderAlert(false), 4000);
         }
       } catch {
@@ -131,14 +158,22 @@ export default function CocinaClient({ initialOrders, dispatchedCount, today, st
             </div>
           </div>
 
-          {/* Vista toggle */}
-          <div className="flex gap-1 p-1 bg-graphite-700 rounded-lg">
-            {(["grupos", "lista"] as const).map((v) => (
-              <button key={v} onClick={() => setView(v)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all capitalize ${view === v ? "bg-terracotta-500 text-white" : "text-warm-400 hover:text-cream-200"}`}>
-                {v}
-              </button>
-            ))}
+          {/* Vista toggle + sonido */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { const next = !soundOn; setSoundOn(next); if (next) playKitchenBell(); }}
+              title={soundOn ? "Silenciar aviso sonoro" : "Activar aviso sonoro"}
+              className={`p-2 rounded-lg transition-colors ${soundOn ? "bg-terracotta-500/20 text-terracotta-300 hover:bg-terracotta-500/30" : "bg-graphite-700 text-warm-500 hover:text-warm-300"}`}>
+              {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </button>
+            <div className="flex gap-1 p-1 bg-graphite-700 rounded-lg">
+              {(["grupos", "lista"] as const).map((v) => (
+                <button key={v} onClick={() => setView(v)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all capitalize ${view === v ? "bg-terracotta-500 text-white" : "text-warm-400 hover:text-cream-200"}`}>
+                  {v}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

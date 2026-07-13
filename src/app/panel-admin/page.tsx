@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import PanelAdminClient, {
   type TodayOrder, type DailyMenuRow, type CompanyRow,
   type MenuRow, type IngredientRow, type SegmentPriceRow, type PromotionRow,
+  type ReportsData,
 } from "./PanelAdminClient";
 
 export default async function PanelAdminPage() {
@@ -33,6 +34,35 @@ export default async function PanelAdminPage() {
     sql`SELECT id, menu_id, segment, price, active FROM menu_segment_prices`,
     sql`SELECT id, name, discount_type, discount_value, min_order_total, applies_to, valid_from::text AS valid_from, valid_until::text AS valid_until, active FROM promotions ORDER BY id DESC`,
   ]);
+
+  // ─── Reportes (últimos 30 / 14 días) ──────────────────────
+  const [topDishes, salesByDay, byCategory, topClients] = await Promise.all([
+    sql`SELECT m.name, COUNT(*)::int AS qty, COALESCE(SUM(o.total), 0) AS revenue
+        FROM orders o JOIN menus m ON m.id = o.menu_id
+        WHERE o.status != 'cancelado' AND o.date >= CURRENT_DATE - 29
+        GROUP BY m.name ORDER BY qty DESC, revenue DESC LIMIT 10`,
+    sql`SELECT o.date::text AS date, COUNT(*)::int AS qty, COALESCE(SUM(o.total), 0) AS revenue
+        FROM orders o
+        WHERE o.status != 'cancelado' AND o.date >= CURRENT_DATE - 13
+        GROUP BY o.date ORDER BY o.date`,
+    sql`SELECT m.category, COUNT(*)::int AS qty, COALESCE(SUM(o.total), 0) AS revenue
+        FROM orders o JOIN menus m ON m.id = o.menu_id
+        WHERE o.status != 'cancelado' AND o.date >= CURRENT_DATE - 29
+        GROUP BY m.category ORDER BY revenue DESC`,
+    sql`SELECT COALESCE(p.full_name, u.email) AS name, COUNT(*)::int AS qty, COALESCE(SUM(o.total), 0) AS revenue
+        FROM orders o
+        JOIN users u ON u.id = o.user_id
+        LEFT JOIN profiles p ON p.id = o.user_id
+        WHERE o.status != 'cancelado' AND o.date >= CURRENT_DATE - 29
+        GROUP BY COALESCE(p.full_name, u.email) ORDER BY revenue DESC LIMIT 8`,
+  ]);
+
+  const reports: ReportsData = {
+    topDishes: topDishes.map((r) => ({ name: r.name as string, qty: Number(r.qty), revenue: Number(r.revenue) })),
+    salesByDay: salesByDay.map((r) => ({ date: r.date as string, qty: Number(r.qty), revenue: Number(r.revenue) })),
+    byCategory: byCategory.map((r) => ({ category: r.category as string, qty: Number(r.qty), revenue: Number(r.revenue) })),
+    topClients: topClients.map((r) => ({ name: r.name as string, qty: Number(r.qty), revenue: Number(r.revenue) })),
+  };
 
   const nameMap = Object.fromEntries(rawTodayOrders.map((o) => [o.user_id as string, ""]));
   if (Object.keys(nameMap).length > 0) {
@@ -64,6 +94,7 @@ export default async function PanelAdminPage() {
       ingredients={rawIngredients as unknown as IngredientRow[]}
       segmentPrices={rawSegmentPrices as unknown as SegmentPriceRow[]}
       promotions={rawPromotions as unknown as PromotionRow[]}
+      reports={reports}
       today={today}
     />
   );

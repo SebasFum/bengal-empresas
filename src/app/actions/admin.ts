@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { sendOrderOnTheWay } from "@/lib/email";
 import type { Segment } from "@/lib/supabase/types";
 
 type OrderStatus = "pendiente" | "en_produccion" | "en_camino" | "entregado" | "cancelado";
@@ -38,6 +39,25 @@ export async function updateOrderStatus(orderId: string, newStatus: OrderStatus)
   if (!check.ok) return { success: false, error: check.error };
 
   await sql`UPDATE orders SET status = ${newStatus} WHERE id = ${orderId}`;
+
+  if (newStatus === "en_camino") {
+    sql`
+      SELECT u.email, m.name AS menu_name
+      FROM orders o
+      JOIN users u ON u.id = o.user_id
+      JOIN menus m ON m.id = o.menu_id
+      WHERE o.id = ${orderId} LIMIT 1
+    `.then((rows) => {
+      const r = rows[0];
+      if (!r) return;
+      return sendOrderOnTheWay({
+        to:       r.email as string,
+        menuName: r.menu_name as string,
+        orderId,
+      });
+    }).catch((e) => console.error("[email en camino]", e));
+  }
+
   revalidatePath("/panel-admin");
   return { success: true };
 }

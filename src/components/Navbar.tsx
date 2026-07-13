@@ -38,6 +38,9 @@ export default function Navbar() {
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
+  // La pantalla de cocina es fullscreen con header propio
+  if (pathname?.startsWith("/cocina")) return null;
+
   if (isPortal) return <PortalNav />;
 
   return (

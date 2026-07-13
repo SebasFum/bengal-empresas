@@ -57,6 +57,12 @@ export type IngredientRow = {
   cost_per_unit: number | null; min_stock_alert: number | null;
 };
 export type SegmentPriceRow = { id: string; menu_id: string; segment: string; price: number; active: boolean };
+export type ReportsData = {
+  topDishes:  { name: string; qty: number; revenue: number }[];
+  salesByDay: { date: string; qty: number; revenue: number }[];
+  byCategory: { category: string; qty: number; revenue: number }[];
+  topClients: { name: string; qty: number; revenue: number }[];
+};
 export type PromotionRow = {
   id: string; name: string; discount_type: "percentage" | "fixed"; discount_value: number;
   min_order_total: number | null; applies_to: string; valid_from: string; valid_until: string; active: boolean;
@@ -71,13 +77,15 @@ type Props = {
   ingredients: IngredientRow[];
   segmentPrices: SegmentPriceRow[];
   promotions: PromotionRow[];
+  reports: ReportsData;
   today: string;
 };
 
-type TabId = "pedidos" | "menudia" | "catalogo" | "ingredientes" | "precios" | "promociones" | "redes" | "empresas";
+type TabId = "pedidos" | "reportes" | "menudia" | "catalogo" | "ingredientes" | "precios" | "promociones" | "redes" | "empresas";
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "pedidos",      label: "Pedidos",      icon: <ShoppingBag size={14} /> },
+  { id: "reportes",     label: "Reportes",     icon: <TrendingUp size={14} /> },
   { id: "menudia",      label: "Menú del día", icon: <Calendar size={14} /> },
   { id: "catalogo",     label: "Catálogo",     icon: <ChefHat size={14} /> },
   { id: "ingredientes", label: "Ingredientes", icon: <Package size={14} /> },
@@ -100,7 +108,7 @@ function Feedback({ msg, isError }: { msg: string; isError?: boolean }) {
 export default function PanelAdminClient({
   stats, dailyMenus: initialDailyMenus, todayOrders, companies,
   menus: initialMenus, ingredients: initialIngredients, segmentPrices: initialPrices,
-  promotions: initialPromos, today,
+  promotions: initialPromos, reports, today,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("pedidos");
   const [orders, setOrders]           = useState(todayOrders);
@@ -222,6 +230,11 @@ export default function PanelAdminClient({
           </div>
         )}
 
+        {/* ── Tab: Reportes ── */}
+        {activeTab === "reportes" && (
+          <Reportes reports={reports} />
+        )}
+
         {/* ── Tab: Menú del día ── */}
         {activeTab === "menudia" && (
           <MenuDelDia
@@ -287,6 +300,154 @@ export default function PanelAdminClient({
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Sub-component: Reportes
+// ═══════════════════════════════════════════════════════════════
+const CATEGORY_LABELS: Record<string, string> = {
+  almuerzo: "Almuerzos", entrada: "Entradas", postre: "Postres",
+  bebida: "Bebidas", extra: "Extras", ensalada: "Ensaladas", especial: "Especiales",
+};
+
+function RankingRows({ rows, unit }: {
+  rows: { label: string; qty: number; revenue: number }[];
+  unit: string;
+}) {
+  const maxQty = Math.max(...rows.map((r) => r.qty), 1);
+  return (
+    <div className="divide-y divide-cream-100">
+      {rows.map((r, i) => (
+        <div key={r.label} className="px-6 py-3 hover:bg-cream-50 transition-colors">
+          <div className="flex items-center justify-between gap-3 mb-1.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${i === 0 ? "bg-terracotta-500 text-white" : i < 3 ? "bg-terracotta-100 text-terracotta-700" : "bg-cream-200 text-warm-500"}`}>
+                {i + 1}
+              </span>
+              <span className="font-medium text-graphite-800 text-sm truncate">{r.label}</span>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0 text-right">
+              <span className="text-xs text-warm-400">{r.qty} {unit}</span>
+              <span className="font-bold text-graphite-800 text-sm min-w-[80px]">${r.revenue.toLocaleString("es-AR")}</span>
+            </div>
+          </div>
+          <div className="h-1.5 bg-cream-200 rounded-full overflow-hidden ml-[34px]">
+            <div className="h-full bg-terracotta-500 rounded-full transition-all" style={{ width: `${(r.qty / maxQty) * 100}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Reportes({ reports }: { reports: ReportsData }) {
+  const totalQty     = reports.topDishes.reduce((s, d) => s + d.qty, 0);
+  const totalRevenue = reports.byCategory.reduce((s, c) => s + c.revenue, 0);
+  const totalOrders  = reports.byCategory.reduce((s, c) => s + c.qty, 0);
+  const avgTicket    = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const topDish      = reports.topDishes[0];
+
+  // Ventas por día: completar los 14 días aunque no haya ventas
+  const days: { date: string; qty: number; revenue: number }[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const iso = d.toISOString().split("T")[0];
+    const found = reports.salesByDay.find((s) => s.date === iso);
+    days.push({ date: iso, qty: found?.qty ?? 0, revenue: found?.revenue ?? 0 });
+  }
+  const maxDayRevenue = Math.max(...days.map((d) => d.revenue), 1);
+
+  if (totalOrders === 0) {
+    return (
+      <div className="bg-white rounded-2xl shadow-card border border-cream-200 py-20 text-center">
+        <TrendingUp size={40} className="text-warm-300 mx-auto mb-4" />
+        <p className="text-warm-400 font-semibold">Todavía no hay ventas en los últimos 30 días.</p>
+        <p className="text-warm-500 text-sm mt-1">Cuando entren pedidos, acá vas a ver rankings y tendencias.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* KPIs 30 días */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Pedidos (30 días)", value: totalOrders.toLocaleString("es-AR") },
+          { label: "Facturación (30 días)", value: `$${totalRevenue.toLocaleString("es-AR")}` },
+          { label: "Ticket promedio", value: `$${Math.round(avgTicket).toLocaleString("es-AR")}` },
+          { label: "Plato estrella", value: topDish?.name ?? "—" },
+        ].map((s) => (
+          <div key={s.label} className="bg-white rounded-xl p-5 shadow-card border border-cream-200">
+            <p className="text-xs text-warm-400 mb-1">{s.label}</p>
+            <p className="font-bold text-graphite-800 text-lg leading-tight">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Ventas por día */}
+      <div className="bg-white rounded-2xl shadow-card border border-cream-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-cream-200">
+          <h2 className="font-bold text-graphite-800">Ventas por día</h2>
+          <p className="text-warm-400 text-xs mt-0.5">Facturación de los últimos 14 días</p>
+        </div>
+        <div className="px-6 py-5">
+          <div className="flex items-end gap-1.5 h-36">
+            {days.map((d) => {
+              const dayDate = new Date(d.date + "T12:00:00");
+              const isToday = d === days[days.length - 1];
+              const heightPct = (d.revenue / maxDayRevenue) * 100;
+              return (
+                <div key={d.date} className="flex-1 flex flex-col items-center gap-1.5 min-w-0 group relative">
+                  <span className="absolute -top-1 -translate-y-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-graphite-800 text-cream-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap z-10 shadow-lg">
+                    {dayDate.toLocaleDateString("es-AR", { day: "numeric", month: "short" })} · {d.qty} ped. · ${d.revenue.toLocaleString("es-AR")}
+                  </span>
+                  <div className="w-full h-28 flex items-end">
+                    <div
+                      className={`w-full rounded-t transition-all ${isToday ? "bg-terracotta-600" : d.revenue > 0 ? "bg-terracotta-400 group-hover:bg-terracotta-500" : "bg-cream-200"}`}
+                      style={{ height: d.revenue > 0 ? `${Math.max(heightPct, 4)}%` : "3px" }}
+                    />
+                  </div>
+                  <span className={`text-[10px] leading-none ${isToday ? "font-bold text-terracotta-600" : "text-warm-400"}`}>
+                    {dayDate.getDate()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Ranking de platos */}
+      <div className="bg-white rounded-2xl shadow-card border border-cream-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-cream-200 flex items-center justify-between">
+          <div>
+            <h2 className="font-bold text-graphite-800">Platos más vendidos</h2>
+            <p className="text-warm-400 text-xs mt-0.5">Últimos 30 días · {totalQty} unidades</p>
+          </div>
+        </div>
+        <RankingRows rows={reports.topDishes.map((d) => ({ label: d.name, qty: d.qty, revenue: d.revenue }))} unit="vend." />
+      </div>
+
+      {/* Categorías + Clientes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl shadow-card border border-cream-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-cream-200">
+            <h2 className="font-bold text-graphite-800">Por categoría</h2>
+            <p className="text-warm-400 text-xs mt-0.5">Últimos 30 días</p>
+          </div>
+          <RankingRows rows={reports.byCategory.map((c) => ({ label: CATEGORY_LABELS[c.category] ?? c.category, qty: c.qty, revenue: c.revenue }))} unit="ped." />
+        </div>
+        <div className="bg-white rounded-2xl shadow-card border border-cream-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-cream-200">
+            <h2 className="font-bold text-graphite-800">Mejores clientes</h2>
+            <p className="text-warm-400 text-xs mt-0.5">Últimos 30 días</p>
+          </div>
+          <RankingRows rows={reports.topClients.map((c) => ({ label: c.name, qty: c.qty, revenue: c.revenue }))} unit="ped." />
+        </div>
       </div>
     </div>
   );
