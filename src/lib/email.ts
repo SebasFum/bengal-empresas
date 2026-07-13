@@ -6,7 +6,7 @@ function emailDisabled() {
   return !process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.startsWith("re_...");
 }
 
-const FROM = "Bengal <pedidos@bengalempresarial.com.ar>";
+const FROM = "Bengal <pedidos@mail.bengalrestaurante.com.ar>";
 
 function shell(inner: string) {
   return `
