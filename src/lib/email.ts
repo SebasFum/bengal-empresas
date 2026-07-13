@@ -7,6 +7,7 @@ function emailDisabled() {
 }
 
 const FROM = "Bengal <pedidos@mail.bengalrestaurante.com.ar>";
+const REPLY_TO = "pedidos@bengalrestaurante.com.ar";
 
 function shell(inner: string) {
   return `
@@ -53,7 +54,8 @@ export async function sendOrderConfirmation(input: OrderConfirmationInput) {
     : "";
 
   await resend.emails.send({
-    from: "Bengal <pedidos@bengalempresarial.com.ar>",
+    from: FROM,
+    replyTo: REPLY_TO,
     to: input.to,
     subject: `✅ Pedido confirmado — ${input.menuName}`,
     html: `
@@ -134,6 +136,7 @@ export async function sendNewOrderAlert(input: NewOrderAlertInput) {
 
   await resend.emails.send({
     from: FROM,
+    replyTo: REPLY_TO,
     to: recipients,
     subject: `🔔 Nuevo pedido — ${input.menuName} (${input.clientName})`,
     html: shell(`
@@ -174,6 +177,7 @@ export async function sendOrderOnTheWay(input: OrderOnTheWayInput) {
 
   await resend.emails.send({
     from: FROM,
+    replyTo: REPLY_TO,
     to: input.to,
     subject: `🛵 Tu pedido está en camino — ${input.menuName}`,
     html: shell(`
