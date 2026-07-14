@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
+import { cormorant } from "@/lib/brand-fonts";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FooterGate from "@/components/FooterGate";
 import Providers from "@/components/Providers";
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,7 +23,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={`h-full ${playfair.variable} ${inter.variable}`}>
+    <html lang="es" className={`h-full ${cormorant.variable} ${inter.variable}`}>
       <body className="min-h-full flex flex-col">
         <Providers>
           <Navbar />

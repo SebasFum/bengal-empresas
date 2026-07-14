@@ -83,9 +83,9 @@ export default function LoginForm() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 justify-center mb-6">
             <div className="w-10 h-10 bg-terracotta-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>B</span>
+              <span className="text-white font-bold text-sm" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>B</span>
             </div>
-            <span className="text-2xl font-semibold text-graphite-800" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>Bengal</span>
+            <span className="text-2xl font-semibold text-graphite-800" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>Bengal</span>
           </Link>
           <h1 className="text-2xl font-bold text-graphite-800 mb-1">
             {mode === "login" ? "Bienvenido de vuelta" : "Crear cuenta"}

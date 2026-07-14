@@ -462,7 +462,7 @@ export default async function EmpresasHomePage() {
               <div key={step.number} className="bg-white rounded-2xl p-6 shadow-card border border-cream-200">
                 <div
                   className="inline-flex items-center justify-center w-14 h-14 bg-terracotta-50 text-terracotta-500 font-bold text-lg rounded-xl mb-5"
-                  style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}
                 >
                   {step.number}
                 </div>

@@ -29,12 +29,12 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="bg-graphite-800 text-cream-200">
+    <footer className="bg-[#0B0A09] text-cream-200">
       {/* CTA banner */}
       <div className="bg-terracotta-500">
         <div className="container-xl py-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
-            <p className="text-xl font-semibold text-white" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>
+            <p className="text-xl font-semibold text-white" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>
               ¿Querés conocer la propuesta?
             </p>
             <p className="text-terracotta-100 text-sm mt-1">
@@ -63,12 +63,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-terracotta-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>B</span>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 rounded-full bg-[#0B0A09] border border-[#C9A45C] flex items-center justify-center">
+                <span className="text-[#C9A45C] text-sm font-bold leading-none" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>B</span>
               </div>
-              <span className="text-xl font-semibold text-cream-100" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>
-                Bengal <span className="text-terracotta-400">Empresas</span>
+              <span className="flex flex-col leading-none gap-1">
+                <span className="text-lg tracking-[0.3em] font-light text-cream-100" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>
+                  BENGAL
+                </span>
+                <span className="text-[9px] uppercase tracking-[0.35em] text-[#C9A45C]">Empresas</span>
               </span>
             </div>
             <p className="text-warm-400 text-sm leading-relaxed max-w-xs">
@@ -124,7 +127,7 @@ export default function Footer() {
       <div className="border-t border-graphite-700">
         <div className="container-xl py-5 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-xs text-warm-500">
-            © {new Date().getFullYear()} Bengal Empresas. Todos los derechos reservados.
+            © {new Date().getFullYear()} Bengal. Todos los derechos reservados.
           </p>
           <div className="flex gap-4 text-xs text-warm-500">
             <a href="#" className="hover:text-terracotta-400 transition-colors">Privacidad</a>

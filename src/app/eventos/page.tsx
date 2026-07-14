@@ -135,7 +135,7 @@ export default function EventosPage() {
               { step: "04", title: "Lo disfrutás", desc: "Llegamos antes, montamos, servimos y retiramos. Vos solo disfrutás." },
             ].map((s) => (
               <div key={s.step} className="bg-graphite-700 rounded-2xl p-6 border border-graphite-600">
-                <div className="text-3xl font-bold text-terracotta-500 mb-3" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>{s.step}</div>
+                <div className="text-3xl font-bold text-terracotta-500 mb-3" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>{s.step}</div>
                 <h3 className="font-bold text-cream-100 mb-2">{s.title}</h3>
                 <p className="text-warm-400 text-sm leading-relaxed">{s.desc}</p>
               </div>

@@ -8,16 +8,20 @@
   --color-cream-300: #EDE4D4;
   --color-cream-400: #E0D4BE;
 
-  --color-terracotta-50: #FDF4F0;
-  --color-terracotta-100: #FAE8E0;
-  --color-terracotta-200: #F2C9B8;
-  --color-terracotta-300: #E8A88A;
-  --color-terracotta-400: #D4856B;
-  --color-terracotta-500: #C4704F;
-  --color-terracotta-600: #B85C3A;
-  --color-terracotta-700: #9A4A2E;
-  --color-terracotta-800: #7D3A23;
-  --color-terracotta-900: #5E2B1A;
+  /* Escala "terracotta" reasignada al dorado Bengal (#C9A45C) — se conservan
+     los nombres de clase para no tocar cada componente del vertical Empresas.
+     El 400 es el dorado de marca (acentos sobre oscuro); 500+ van más oscuros
+     para que los botones con texto blanco mantengan contraste. */
+  --color-terracotta-50: #FBF7EE;
+  --color-terracotta-100: #F5EBD3;
+  --color-terracotta-200: #EAD6A6;
+  --color-terracotta-300: #DDC07C;
+  --color-terracotta-400: #C9A45C;
+  --color-terracotta-500: #B08A40;
+  --color-terracotta-600: #8F6D32;
+  --color-terracotta-700: #715527;
+  --color-terracotta-800: #55401D;
+  --color-terracotta-900: #3C2D14;
 
   --color-graphite-50: #F5F4F3;
   --color-graphite-100: #E8E6E4;
@@ -59,9 +63,9 @@
   /* Shadows */
   --shadow-card: 0 2px 24px rgba(44, 40, 37, 0.08);
   --shadow-card-hover: 0 8px 40px rgba(44, 40, 37, 0.16);
-  --shadow-warm-sm: 0 2px 8px rgba(196, 112, 79, 0.12);
-  --shadow-warm-md: 0 4px 20px rgba(196, 112, 79, 0.18);
-  --shadow-warm-lg: 0 8px 40px rgba(196, 112, 79, 0.22);
+  --shadow-warm-sm: 0 2px 8px rgba(201, 164, 92, 0.14);
+  --shadow-warm-md: 0 4px 20px rgba(201, 164, 92, 0.2);
+  --shadow-warm-lg: 0 8px 40px rgba(201, 164, 92, 0.25);
 
   /* Keyframes */
   --animate-fade-up: fadeUp 0.6s ease-out forwards;
@@ -98,17 +102,17 @@
 
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: #F5F0E8; }
-  ::-webkit-scrollbar-thumb { background: #C4704F; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: #C9A45C; border-radius: 3px; }
 
   h1, h2, h3, h4 {
-    font-family: var(--font-playfair), Georgia, serif;
+    font-family: var(--font-cormorant), Georgia, serif;
     line-height: 1.15;
     letter-spacing: -0.01em;
   }
 
-  ::selection { background-color: #C4704F; color: white; }
+  ::selection { background-color: #C9A45C; color: #0B0A09; }
 
-  *:focus-visible { outline: 2px solid #C4704F; outline-offset: 2px; }
+  *:focus-visible { outline: 2px solid #C9A45C; outline-offset: 2px; }
 }
 
 .overlay-dark {

@@ -35,7 +35,7 @@ export default function ComoFuncionaPage() {
                 <div className="flex-shrink-0 flex flex-col items-center">
                   <div
                     className="w-14 h-14 bg-terracotta-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg"
-                    style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}
                   >
                     {step.number}
                   </div>

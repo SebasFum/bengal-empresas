@@ -31,6 +31,28 @@ const navLinks = [
   },
 ];
 
+// Wordmark de marca compartido por el nav de marketing y el del portal
+function BrandWordmark({ dark = false }: { dark?: boolean }) {
+  return (
+    <span className="flex items-center gap-2.5">
+      <span className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border ${dark ? "bg-[#0B0A09] border-[#C9A45C]" : "bg-[#0B0A09] border-[#C9A45C]"}`}>
+        <span className="text-[#C9A45C] text-sm font-bold leading-none" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>B</span>
+      </span>
+      <span className="flex flex-col leading-none gap-1">
+        <span
+          className={`text-base tracking-[0.3em] font-light ${dark ? "text-[#EDE6DA]" : "text-graphite-800"}`}
+          style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}
+        >
+          BENGAL
+        </span>
+        <span className={`text-[8px] uppercase tracking-[0.35em] ${dark ? "text-[#C9A45C]" : "text-terracotta-600"}`}>
+          Empresas
+        </span>
+      </span>
+    </span>
+  );
+}
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -54,25 +76,15 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-cream-200"
-          : "bg-gradient-to-b from-black/40 to-transparent"
+      className={`fixed top-0 left-0 right-0 z-50 bg-[#0B0A09]/95 backdrop-blur-md border-b border-white/5 transition-shadow duration-300 ${
+        scrolled ? "shadow-lg shadow-black/30" : ""
       }`}
     >
       <div className="container-xl">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-terracotta-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>B</span>
-            </div>
-            <span
-              className={`text-xl font-semibold tracking-tight transition-colors ${scrolled ? "text-graphite-800" : "text-white drop-shadow-sm"}`}
-              style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
-            >
-              Bengal <span className={scrolled ? "text-terracotta-500" : "text-terracotta-300"}>Empresas</span>
-            </span>
+          <Link href="/" className="group">
+            <BrandWordmark dark />
           </Link>
 
           {/* Desktop nav */}
@@ -81,10 +93,8 @@ export default function Navbar() {
               link.children ? (
                 <div key={link.label} className="relative">
                   <button
-                    className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      scrolled
-                        ? "text-graphite-700 hover:bg-cream-200 hover:text-terracotta-600"
-                        : "text-white/90 hover:text-white hover:bg-white/15 drop-shadow-sm"
+                    className={`flex items-center gap-1 px-3 py-2 text-[13px] font-medium transition-colors ${
+                      dropdown === link.label ? "text-[#C9A45C]" : "text-[#B7AD9C] hover:text-[#C9A45C]"
                     }`}
                     onMouseEnter={() => setDropdown(link.label)}
                     onMouseLeave={() => setDropdown(null)}
@@ -94,7 +104,7 @@ export default function Navbar() {
                   </button>
                   {dropdown === link.label && (
                     <div
-                      className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg border border-cream-200 py-2 min-w-48"
+                      className="absolute top-full left-0 mt-1 bg-[#12100D] border border-white/10 py-2 min-w-56 shadow-xl shadow-black/40"
                       onMouseEnter={() => setDropdown(link.label)}
                       onMouseLeave={() => setDropdown(null)}
                     >
@@ -102,7 +112,7 @@ export default function Navbar() {
                         <Link
                           key={child.href}
                           href={child.href}
-                          className="block px-4 py-2 text-sm text-graphite-700 hover:bg-cream-100 hover:text-terracotta-600 transition-colors"
+                          className="block px-4 py-2.5 text-[13px] text-[#B7AD9C] hover:bg-white/5 hover:text-[#C9A45C] transition-colors"
                         >
                           {child.label}
                         </Link>
@@ -114,12 +124,8 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === link.href
-                      ? scrolled ? "text-terracotta-600 bg-terracotta-50" : "text-white bg-white/20"
-                      : scrolled
-                        ? "text-graphite-700 hover:bg-cream-200 hover:text-terracotta-600"
-                        : "text-white/90 hover:text-white hover:bg-white/15 drop-shadow-sm"
+                  className={`px-3 py-2 text-[13px] font-medium transition-colors ${
+                    pathname === link.href ? "text-[#C9A45C]" : "text-[#B7AD9C] hover:text-[#C9A45C]"
                   }`}
                 >
                   {link.label}
@@ -132,26 +138,22 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-3">
             <Link
               href="/login"
-              className={`text-sm font-medium transition-colors px-3 py-2 ${
-                scrolled ? "text-graphite-700 hover:text-terracotta-600" : "text-white/90 hover:text-white drop-shadow-sm"
-              }`}
+              className="text-[13px] font-medium transition-colors px-3 py-2 text-[#B7AD9C] hover:text-[#C9A45C]"
             >
               Ingresar
             </Link>
             <Link
               href="/degustaciones"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-terracotta-500 text-white text-sm font-semibold rounded-lg hover:bg-terracotta-600 transition-all hover:-translate-y-px"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A45C] text-[#0B0A09] text-[12px] uppercase tracking-[0.15em] font-semibold hover:bg-[#D8B76F] transition-all"
             >
-              Solicitar degustación
+              Degustación
             </Link>
           </div>
 
           {/* Mobile toggle */}
           <button
             onClick={() => setOpen(!open)}
-            className={`lg:hidden p-2 rounded-lg transition-colors ${
-              scrolled ? "text-graphite-700 hover:bg-cream-200" : "text-white hover:bg-white/15"
-            }`}
+            className="lg:hidden p-2 text-[#EDE6DA] hover:text-[#C9A45C] transition-colors"
           >
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -160,14 +162,14 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="lg:hidden bg-white border-t border-cream-200 shadow-lg">
+        <div className="lg:hidden bg-[#0B0A09] border-t border-white/5 shadow-2xl shadow-black/50">
           <div className="container-xl py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
               <div key={link.label}>
                 <Link
                   href={link.href}
-                  className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-cream-100 hover:text-terracotta-600 ${
-                    pathname === link.href ? "text-terracotta-600 bg-terracotta-50" : "text-graphite-700"
+                  className={`block px-4 py-3 text-sm font-medium transition-colors ${
+                    pathname === link.href ? "text-[#C9A45C]" : "text-[#EDE6DA] hover:text-[#C9A45C]"
                   }`}
                 >
                   {link.label}
@@ -176,20 +178,20 @@ export default function Navbar() {
                   <Link
                     key={child.href}
                     href={child.href}
-                    className="block px-8 py-2 text-sm text-warm-500 hover:text-terracotta-600 transition-colors"
+                    className="block px-8 py-2 text-sm text-[#B7AD9C] hover:text-[#C9A45C] transition-colors"
                   >
                     {child.label}
                   </Link>
                 ))}
               </div>
             ))}
-            <div className="mt-2 pt-4 border-t border-cream-200 flex flex-col gap-2">
-              <Link href="/login" className="px-4 py-3 text-sm font-medium text-graphite-700 hover:text-terracotta-600">
+            <div className="mt-2 pt-4 border-t border-white/10 flex flex-col gap-2">
+              <Link href="/login" className="px-4 py-3 text-sm font-medium text-[#B7AD9C] hover:text-[#C9A45C]">
                 Ingresar al portal
               </Link>
               <Link
                 href="/degustaciones"
-                className="mx-4 py-3 bg-terracotta-500 text-white text-sm font-semibold rounded-lg text-center hover:bg-terracotta-600 transition-colors"
+                className="mx-4 py-3 bg-[#C9A45C] text-[#0B0A09] text-[12px] uppercase tracking-[0.15em] font-semibold text-center hover:bg-[#D8B76F] transition-colors"
               >
                 Solicitar degustación gratis
               </Link>
@@ -233,13 +235,11 @@ function PortalNav() {
         <div className="container-xl">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-terracotta-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>B</span>
-              </div>
-              <span className="font-semibold text-graphite-800 hidden sm:block" style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>
-                Bengal <span className="text-terracotta-500">Empresas</span>
-              </span>
+            <Link href="/" className="hidden sm:block">
+              <BrandWordmark />
+            </Link>
+            <Link href="/" className="sm:hidden w-8 h-8 rounded-full bg-[#0B0A09] border border-[#C9A45C] flex items-center justify-center">
+              <span className="text-[#C9A45C] text-sm font-bold leading-none" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>B</span>
             </Link>
 
             {/* Desktop nav */}
