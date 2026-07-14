@@ -83,9 +83,9 @@ export default function Footer() {
                 <Mail size={14} />
                 hola@bengalempresas.com
               </a>
-              <a href="https://wa.me/5491100000000" className="flex items-center gap-2 text-sm text-warm-400 hover:text-terracotta-400 transition-colors">
+              <a href="https://wa.me/5491128999904" className="flex items-center gap-2 text-sm text-warm-400 hover:text-terracotta-400 transition-colors">
                 <Phone size={14} />
-                +54 9 11 0000-0000
+                +54 9 11 2899-9904
               </a>
               <span className="flex items-center gap-2 text-sm text-warm-400">
                 <MapPin size={14} />

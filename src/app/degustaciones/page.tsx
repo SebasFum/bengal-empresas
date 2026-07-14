@@ -95,7 +95,7 @@ export default function DegustacionesPage() {
               <div className="mt-10 p-6 bg-white rounded-2xl shadow-card border border-cream-200">
                 <p className="text-warm-500 text-sm mb-2">¿Preferís por WhatsApp?</p>
                 <a
-                  href="https://wa.me/5491100000000?text=Hola%2C%20quiero%20solicitar%20una%20degustaci%C3%B3n%20para%20mi%20empresa"
+                  href="https://wa.me/5491128999904?text=Hola%2C%20quiero%20solicitar%20una%20degustaci%C3%B3n%20para%20mi%20empresa"
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors text-sm"
                 >
                   Escribirnos por WhatsApp <ArrowRight size={14} />

@@ -124,7 +124,7 @@ export default function MiCuentaClient({
                 className="input-base"
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
-                placeholder="+54 9 11 0000-0000"
+                placeholder="+54 9 11 2899-9904"
               />
             </div>
           </div>

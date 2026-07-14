@@ -8,8 +8,7 @@ import {
 } from "lucide-react";
 import type { DeliveryMenu } from "@/lib/db-delivery";
 
-// TODO: reemplazar por el número real de WhatsApp de pedidos
-const WHATSAPP_PHONE = "5491100000000";
+const WHATSAPP_PHONE = "5491128999904";
 const CART_KEY = "bengal-delivery-cart-v1";
 const FALLBACK_IMG = "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80";
 

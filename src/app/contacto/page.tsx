@@ -42,7 +42,7 @@ export default function ContactoPage() {
                 <div className="space-y-4">
                   {[
                     { icon: Mail, label: "Email", value: "hola@bengalempresas.com", href: "mailto:hola@bengalempresas.com" },
-                    { icon: Phone, label: "WhatsApp", value: "+54 9 11 0000-0000", href: "https://wa.me/5491100000000" },
+                    { icon: Phone, label: "WhatsApp", value: "+54 9 11 2899-9904", href: "https://wa.me/5491128999904" },
                     { icon: MapPin, label: "Zona de cobertura", value: "CABA y GBA Norte", href: null },
                     { icon: Clock, label: "Horario", value: "Lun–Vie de 8:00 a 18:00 hs", href: null },
                   ].map(({ icon: Icon, label, value, href }) => (

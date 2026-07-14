@@ -51,7 +51,7 @@ export default function FAQPage() {
               <Link href="/contacto" className="inline-flex items-center gap-2 px-5 py-2.5 bg-terracotta-500 text-white font-semibold rounded-lg hover:bg-terracotta-600 transition-all text-sm">
                 Enviar consulta <ArrowRight size={14} />
               </Link>
-              <a href="https://wa.me/5491100000000" className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-all text-sm">
+              <a href="https://wa.me/5491128999904" className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-all text-sm">
                 WhatsApp
               </a>
             </div>

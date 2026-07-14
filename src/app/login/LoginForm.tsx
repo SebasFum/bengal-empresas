@@ -169,7 +169,7 @@ export default function LoginForm() {
             <div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-warm-400">o</span></div>
           </div>
 
-          <a href="https://wa.me/5491100000000?text=Hola%2C%20quiero%20acceder%20al%20portal"
+          <a href="https://wa.me/5491128999904?text=Hola%2C%20quiero%20acceder%20al%20portal"
             className="w-full flex items-center justify-center gap-2 py-3 border-2 border-green-500 text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-all text-sm">
             Consultar por WhatsApp
           </a>
