@@ -1,6 +1,13 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Init perezoso: `new Resend(undefined)` tira en el constructor, y sin esto
+// rompe el build en cualquier ruta que importe este módulo mientras
+// RESEND_API_KEY no esté configurada en el entorno.
+let _resend: Resend | null = null;
+function getResend() {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
+}
 
 function emailDisabled() {
   return !process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.startsWith("re_...");
@@ -53,7 +60,7 @@ export async function sendOrderConfirmation(input: OrderConfirmationInput) {
     ? `<p style="margin:4px 0 0;color:#6b7280;font-size:14px;">Nota: ${input.notes}</p>`
     : "";
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     replyTo: REPLY_TO,
     to: input.to,
@@ -134,7 +141,7 @@ export async function sendNewOrderAlert(input: NewOrderAlertInput) {
     : input.segment === "hogar" ? "🏠 Hogar"
     : input.segment === "eventos" ? "🎉 Eventos" : "";
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     replyTo: REPLY_TO,
     to: recipients,
@@ -175,7 +182,7 @@ type OrderOnTheWayInput = {
 export async function sendOrderOnTheWay(input: OrderOnTheWayInput) {
   if (emailDisabled() || !input.to) return;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     replyTo: REPLY_TO,
     to: input.to,
@@ -227,7 +234,7 @@ export async function sendDeliveryOrderAlert(input: DeliveryOrderAlertInput) {
     `<p style="margin:0 0 4px;color:#2C2825;font-size:14px;">${i.qty}× ${i.name} — $${(i.price * i.qty).toLocaleString("es-AR")}</p>`
   ).join("");
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     replyTo: REPLY_TO,
     to: recipients,
