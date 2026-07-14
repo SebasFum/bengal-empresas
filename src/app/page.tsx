@@ -3,9 +3,9 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 import { cormorant, jost } from "@/lib/brand-fonts";
 
 export const metadata = {
-  title: "BENGAL — Alta Gastronomía · Buenos Aires, desde 1995",
+  title: "BENGAL — Buenos Aires, desde 1995",
   description:
-    "Del bistró de Plaza San Martín a Pilar Golf y los hoteles CasaSur. La casa pionera de la cocina india en Buenos Aires vuelve: nuevo local en construcción. Hoy, Bengal Empresas y Bengal Delivery.",
+    "Del bistró de Plaza San Martín a Pilar Golf y los hoteles CasaSur. La casa pionera de la cocina india en Buenos Aires vuelve: nuevo local en construcción. Hoy, Bengal Empresas, Bengal Delivery y Bengal Catering.",
 };
 
 const hitos = [
@@ -77,7 +77,7 @@ export default function BrandHomePage() {
         <div className="relative h-px w-24 bg-[#C9A45C]/60 my-10" />
         <p className="relative max-w-xl text-[#B7AD9C] text-base md:text-lg font-light leading-relaxed">
           Del bistró de Plaza San Martín a Pilar Golf y los hoteles CasaSur.
-          Treinta años de una cocina que nunca dejó de estar en la mesa de los que saben.
+          Treinta años de una cocina que nunca dejó de estar en boca de los que saben.
         </p>
         <a
           href="#historia"
