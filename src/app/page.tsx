@@ -197,8 +197,8 @@ export default function BrandHomePage() {
                   Bengal Delivery
                 </h3>
                 <p className="text-[#B7AD9C] font-light leading-relaxed text-[0.95rem]">
-                  Los clásicos de la casa — curries, cocina mediterránea y los platos de siempre —
-                  llegan a tu mesa. Como en el salón, pero en tu casa.
+                  Milanesas, tapeos, tortillas y los clásicos de la casa, directo a tu mesa.
+                  Elegís, sumás al pedido y te lo llevamos.
                 </p>
               </div>
               <span className="mt-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-[#C9A45C] group-hover:gap-4 transition-all">
