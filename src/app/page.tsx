@@ -37,7 +37,7 @@ const hitos = [
   {
     year: "HOY",
     title: "El regreso",
-    text: "Dos cocinas en marcha — Empresas y Delivery — y una noticia esperada: el nuevo local de Bengal ya está en construcción.",
+    text: "Tres unidades en marcha — Empresas, Delivery y Catering — y una noticia esperada: el nuevo local de Bengal ya está en construcción.",
   },
 ];
 
@@ -57,6 +57,7 @@ export default function BrandHomePage() {
             <a href="#proximamente" className="hover:text-[#C9A45C] transition-colors">Próximamente</a>
             <Link href="/empresas" className="hover:text-[#C9A45C] transition-colors">Empresas</Link>
             <Link href="/delivery" className="hover:text-[#C9A45C] transition-colors">Delivery</Link>
+            <Link href="/catering" className="hover:text-[#C9A45C] transition-colors">Catering</Link>
           </nav>
         </div>
       </header>
@@ -167,18 +168,18 @@ export default function BrandHomePage() {
             Bengal, hoy
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link
               href="/empresas"
-              className="group relative border border-white/10 hover:border-[#C9A45C]/60 transition-all duration-500 p-10 md:p-14 min-h-[320px] flex flex-col justify-between"
+              className="group relative border border-white/10 hover:border-[#C9A45C]/60 transition-all duration-500 p-10 md:p-12 min-h-[320px] flex flex-col justify-between"
             >
               <div>
                 <p className="text-[10px] uppercase tracking-[0.35em] text-[#C9A45C] mb-5">Gastronomía corporativa</p>
-                <h3 className="text-3xl md:text-4xl font-light mb-4" style={{ fontFamily: "var(--font-cormorant), serif" }}>
+                <h3 className="text-3xl font-light mb-4" style={{ fontFamily: "var(--font-cormorant), serif" }}>
                   Bengal Empresas
                 </h3>
                 <p className="text-[#B7AD9C] font-light leading-relaxed text-[0.95rem]">
-                  Viandas gourmet, almuerzos ejecutivos, coffee breaks y eventos internos.
+                  Viandas gourmet y almuerzos diarios para equipos.
                   La cocina de Bengal, al servicio de las compañías del Parque Industrial Pilar.
                 </p>
               </div>
@@ -189,11 +190,11 @@ export default function BrandHomePage() {
 
             <Link
               href="/delivery"
-              className="group relative border border-white/10 hover:border-[#C9A45C]/60 transition-all duration-500 p-10 md:p-14 min-h-[320px] flex flex-col justify-between"
+              className="group relative border border-white/10 hover:border-[#C9A45C]/60 transition-all duration-500 p-10 md:p-12 min-h-[320px] flex flex-col justify-between"
             >
               <div>
                 <p className="text-[10px] uppercase tracking-[0.35em] text-[#C9A45C] mb-5">A domicilio</p>
-                <h3 className="text-3xl md:text-4xl font-light mb-4" style={{ fontFamily: "var(--font-cormorant), serif" }}>
+                <h3 className="text-3xl font-light mb-4" style={{ fontFamily: "var(--font-cormorant), serif" }}>
                   Bengal Delivery
                 </h3>
                 <p className="text-[#B7AD9C] font-light leading-relaxed text-[0.95rem]">
@@ -203,6 +204,25 @@ export default function BrandHomePage() {
               </div>
               <span className="mt-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-[#C9A45C] group-hover:gap-4 transition-all">
                 Pedir a casa <ArrowRight size={13} />
+              </span>
+            </Link>
+
+            <Link
+              href="/catering"
+              className="group relative border border-white/10 hover:border-[#C9A45C]/60 transition-all duration-500 p-10 md:p-12 min-h-[320px] flex flex-col justify-between"
+            >
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.35em] text-[#C9A45C] mb-5">Fiestas & eventos</p>
+                <h3 className="text-3xl font-light mb-4" style={{ fontFamily: "var(--font-cormorant), serif" }}>
+                  Bengal Catering
+                </h3>
+                <p className="text-[#B7AD9C] font-light leading-relaxed text-[0.95rem]">
+                  Desayunos, tés, coffee breaks y celebraciones desde 20 comensales.
+                  La mesa de Bengal, en tu evento.
+                </p>
+              </div>
+              <span className="mt-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-[#C9A45C] group-hover:gap-4 transition-all">
+                Cotizar mi evento <ArrowRight size={13} />
               </span>
             </Link>
           </div>

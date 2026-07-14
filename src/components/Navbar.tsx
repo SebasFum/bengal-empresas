@@ -38,8 +38,8 @@ export default function Navbar() {
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
-  // Pantallas con chrome propio: cocina (fullscreen) y las páginas de marca (portada y delivery)
-  if (pathname?.startsWith("/cocina") || pathname === "/" || pathname?.startsWith("/delivery")) return null;
+  // Pantallas con chrome propio: cocina (fullscreen) y las páginas de marca (portada, delivery, catering)
+  if (pathname?.startsWith("/cocina") || pathname === "/" || pathname?.startsWith("/delivery") || pathname?.startsWith("/catering")) return null;
 
   if (isPortal) return <PortalNav />;
 
