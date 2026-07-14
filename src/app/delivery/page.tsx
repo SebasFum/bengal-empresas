@@ -22,21 +22,26 @@ export default async function DeliveryPage() {
     >
       {/* ── Nav de marca ── */}
       <header className="sticky top-0 z-50 bg-[#0B0A09]/95 backdrop-blur border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-5 lg:px-10 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-lg tracking-[0.35em] font-light hover:text-[#C9A45C] transition-colors"
-            style={{ fontFamily: "var(--font-cormorant), serif" }}
-          >
-            BENGAL
-          </Link>
-          <span className="text-[10px] uppercase tracking-[0.35em] text-[#C9A45C]">Delivery</span>
-          <nav className="flex items-center gap-6 text-[11px] uppercase tracking-[0.2em] text-[#B7AD9C]">
-            <Link href="/" className="hidden sm:inline-flex items-center gap-2 hover:text-[#C9A45C] transition-colors">
+        <div className="max-w-6xl mx-auto px-4 md:px-5 lg:px-10 h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link
+              href="/"
+              className="text-lg tracking-[0.35em] font-light hover:text-[#C9A45C] transition-colors"
+              style={{ fontFamily: "var(--font-cormorant), serif" }}
+            >
+              BENGAL
+            </Link>
+            <span className="hidden sm:inline text-[10px] uppercase tracking-[0.35em] text-[#C9A45C]">Delivery</span>
+          </div>
+          <nav className="flex items-center gap-4 md:gap-6 text-[10px] md:text-[11px] uppercase tracking-[0.15em] md:tracking-[0.2em] text-[#B7AD9C] overflow-x-auto scrollbar-hide">
+            <Link href="/" className="inline-flex items-center gap-2 hover:text-[#C9A45C] transition-colors whitespace-nowrap">
               <ArrowLeft size={12} /> La casa
             </Link>
-            <Link href="/empresas" className="hidden sm:inline hover:text-[#C9A45C] transition-colors">
+            <Link href="/empresas" className="hover:text-[#C9A45C] transition-colors whitespace-nowrap">
               Empresas
+            </Link>
+            <Link href="/catering" className="hover:text-[#C9A45C] transition-colors whitespace-nowrap">
+              Catering
             </Link>
           </nav>
         </div>

@@ -20,6 +20,15 @@ const navLinks = [
     ],
   },
   { label: "Contacto", href: "/contacto" },
+  {
+    label: "Bengal",
+    href: "/",
+    children: [
+      { label: "La casa — historia y próximamente", href: "/" },
+      { label: "Bengal Delivery", href: "/delivery" },
+      { label: "Bengal Catering", href: "/catering" },
+    ],
+  },
 ];
 
 export default function Navbar() {

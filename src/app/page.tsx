@@ -48,16 +48,16 @@ export default function BrandHomePage() {
 
       {/* ── Nav de marca ── */}
       <header className="absolute top-0 left-0 right-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
-          <span className="text-xl tracking-[0.35em] font-light" style={{ fontFamily: "var(--font-cormorant), serif" }}>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-10 h-20 flex items-center justify-between gap-3">
+          <span className="text-lg md:text-xl tracking-[0.35em] font-light flex-shrink-0" style={{ fontFamily: "var(--font-cormorant), serif" }}>
             BENGAL
           </span>
-          <nav className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.25em] text-[#B7AD9C]">
-            <a href="#historia" className="hover:text-[#C9A45C] transition-colors">Historia</a>
-            <a href="#proximamente" className="hover:text-[#C9A45C] transition-colors">Próximamente</a>
-            <Link href="/empresas" className="hover:text-[#C9A45C] transition-colors">Empresas</Link>
-            <Link href="/delivery" className="hover:text-[#C9A45C] transition-colors">Delivery</Link>
-            <Link href="/catering" className="hover:text-[#C9A45C] transition-colors">Catering</Link>
+          <nav className="flex items-center gap-4 md:gap-8 text-[10px] md:text-[11px] uppercase tracking-[0.15em] md:tracking-[0.25em] text-[#B7AD9C] overflow-x-auto scrollbar-hide">
+            <a href="#historia" className="hidden md:inline hover:text-[#C9A45C] transition-colors">Historia</a>
+            <a href="#proximamente" className="hidden md:inline hover:text-[#C9A45C] transition-colors">Próximamente</a>
+            <Link href="/empresas" className="hover:text-[#C9A45C] transition-colors whitespace-nowrap">Empresas</Link>
+            <Link href="/delivery" className="hover:text-[#C9A45C] transition-colors whitespace-nowrap">Delivery</Link>
+            <Link href="/catering" className="hover:text-[#C9A45C] transition-colors whitespace-nowrap">Catering</Link>
           </nav>
         </div>
       </header>

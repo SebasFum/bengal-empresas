@@ -51,17 +51,17 @@ export default function CateringPage() {
     >
       {/* ── Nav de marca ── */}
       <header className="absolute top-0 left-0 right-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
-          <Link href="/" className="text-xl tracking-[0.35em] font-light hover:text-[#C9A45C] transition-colors" style={{ fontFamily: "var(--font-cormorant), serif" }}>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-10 h-20 flex items-center justify-between gap-3">
+          <Link href="/" className="text-lg md:text-xl tracking-[0.35em] font-light hover:text-[#C9A45C] transition-colors flex-shrink-0" style={{ fontFamily: "var(--font-cormorant), serif" }}>
             BENGAL
           </Link>
-          <nav className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.25em] text-[#B7AD9C]">
-            <Link href="/" className="hover:text-[#C9A45C] transition-colors inline-flex items-center gap-2">
+          <nav className="flex items-center gap-4 md:gap-8 text-[10px] md:text-[11px] uppercase tracking-[0.15em] md:tracking-[0.25em] text-[#B7AD9C] overflow-x-auto scrollbar-hide">
+            <Link href="/" className="hover:text-[#C9A45C] transition-colors inline-flex items-center gap-2 whitespace-nowrap">
               <ArrowLeft size={12} /> La casa
             </Link>
-            <a href="#servicios" className="hover:text-[#C9A45C] transition-colors">Servicios</a>
-            <a href="#cotizar" className="hover:text-[#C9A45C] transition-colors">Cotizar</a>
-            <Link href="/delivery" className="hover:text-[#C9A45C] transition-colors">Delivery</Link>
+            <a href="#cotizar" className="hidden md:inline hover:text-[#C9A45C] transition-colors">Cotizar</a>
+            <Link href="/empresas" className="hover:text-[#C9A45C] transition-colors whitespace-nowrap">Empresas</Link>
+            <Link href="/delivery" className="hover:text-[#C9A45C] transition-colors whitespace-nowrap">Delivery</Link>
           </nav>
         </div>
       </header>

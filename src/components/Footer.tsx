@@ -14,6 +14,11 @@ const footerLinks = {
     { label: "Preguntas frecuentes", href: "/faq" },
     { label: "Contacto", href: "/contacto" },
   ],
+  bengal: [
+    { label: "La casa — historia", href: "/" },
+    { label: "Bengal Delivery", href: "/delivery" },
+    { label: "Bengal Catering", href: "/catering" },
+  ],
   portal: [
     { label: "Ingresar al portal", href: "/login" },
     { label: "Hacer un pedido", href: "/pedidos" },
@@ -55,7 +60,7 @@ export default function Footer() {
 
       {/* Main footer */}
       <div className="container-xl py-14">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
           {/* Brand */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2 mb-4">
@@ -96,7 +101,7 @@ export default function Footer() {
           {Object.entries(footerLinks).map(([section, links]) => (
             <div key={section}>
               <h4 className="text-cream-100 font-semibold text-sm uppercase tracking-wider mb-4">
-                {section === "servicios" ? "Servicios" : section === "empresa" ? "Empresa" : "Portal"}
+                {section === "servicios" ? "Servicios" : section === "empresa" ? "Empresa" : section === "bengal" ? "Universo Bengal" : "Portal"}
               </h4>
               <ul className="space-y-2">
                 {links.map((link) => (
