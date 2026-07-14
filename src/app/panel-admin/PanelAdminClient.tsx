@@ -1174,7 +1174,7 @@ function RedesSociales({ dailyMenus, today, todayLabel }: { dailyMenus: DailyMen
             className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-terracotta-500 text-white font-semibold rounded-xl hover:bg-terracotta-600 transition-all text-sm">
             <Download size={15} /> Descargar imagen
           </button>
-          <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer"
+          <a href="https://www.instagram.com/bengaloficial/" target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2.5 border-2 border-pink-400 text-pink-600 font-semibold rounded-xl hover:bg-pink-50 transition-all text-sm">
             <Share2 size={15} /> Ir a Instagram
           </a>

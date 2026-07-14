@@ -41,7 +41,7 @@ export default function ContactoPage() {
                 <h2 className="text-2xl font-bold text-graphite-800 mb-6">¿En qué podemos ayudarte?</h2>
                 <div className="space-y-4">
                   {[
-                    { icon: Mail, label: "Email", value: "hola@bengalempresas.com", href: "mailto:hola@bengalempresas.com" },
+                    { icon: Mail, label: "Email", value: "hola@bengalrestaurante.com.ar", href: "mailto:hola@bengalrestaurante.com.ar" },
                     { icon: Phone, label: "WhatsApp", value: "+54 9 11 2899-9904", href: "https://wa.me/5491128999904" },
                     { icon: MapPin, label: "Zona de cobertura", value: "CABA y GBA Norte", href: null },
                     { icon: Clock, label: "Horario", value: "Lun–Vie de 8:00 a 18:00 hs", href: null },

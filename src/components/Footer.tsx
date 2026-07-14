@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Phone, MapPin, Globe, ExternalLink } from "lucide-react";
+import { Mail, Phone, MapPin, Camera } from "lucide-react";
 
 const footerLinks = {
   servicios: [
@@ -70,18 +70,16 @@ export default function Footer() {
               Gastronomía premium para equipos que exigen calidad. Viandas y eventos corporativos con experiencia impecable.
             </p>
             <div className="flex gap-3 mt-6">
-              <a href="#" className="w-9 h-9 bg-graphite-700 rounded-lg flex items-center justify-center text-warm-400 hover:bg-terracotta-500 hover:text-white transition-all">
-                <Globe size={16} />
-              </a>
-              <a href="#" className="w-9 h-9 bg-graphite-700 rounded-lg flex items-center justify-center text-warm-400 hover:bg-terracotta-500 hover:text-white transition-all">
-                <ExternalLink size={16} />
+              <a href="https://www.instagram.com/bengaloficial/" target="_blank" rel="noopener noreferrer"
+                className="w-9 h-9 bg-graphite-700 rounded-lg flex items-center justify-center text-warm-400 hover:bg-terracotta-500 hover:text-white transition-all">
+                <Camera size={16} />
               </a>
             </div>
 
             <div className="mt-6 space-y-2">
-              <a href="mailto:hola@bengalempresas.com" className="flex items-center gap-2 text-sm text-warm-400 hover:text-terracotta-400 transition-colors">
+              <a href="mailto:hola@bengalrestaurante.com.ar" className="flex items-center gap-2 text-sm text-warm-400 hover:text-terracotta-400 transition-colors">
                 <Mail size={14} />
-                hola@bengalempresas.com
+                hola@bengalrestaurante.com.ar
               </a>
               <a href="https://wa.me/5491128999904" className="flex items-center gap-2 text-sm text-warm-400 hover:text-terracotta-400 transition-colors">
                 <Phone size={14} />
