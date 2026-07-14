@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Plus, Minus, ShoppingBag, X, Flame, Star, Search,
   Leaf, Sprout, WheatOff, Beef, Salad, Users,
+  CreditCard, Banknote, Loader2, AlertCircle,
 } from "lucide-react";
 import type { DeliveryMenu } from "@/lib/db-delivery";
 
-const WHATSAPP_PHONE = "5491128999904";
 const CART_KEY = "bengal-delivery-cart-v1";
 const FALLBACK_IMG = "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80";
 
@@ -46,13 +47,19 @@ function money(n: number) {
   return `$${n.toLocaleString("es-AR")}`;
 }
 
+type PaymentMethod = "mercadopago" | "efectivo";
+
 export default function DeliveryStore({ menus }: { menus: DeliveryMenu[] }) {
+  const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [dietFilter, setDietFilter] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [customer, setCustomer] = useState({ nombre: "", direccion: "", notas: "" });
+  const [customer, setCustomer] = useState({ nombre: "", telefono: "", direccion: "", notas: "" });
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("mercadopago");
   const [loaded, setLoaded] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   // Persistencia del carrito
   useEffect(() => {
@@ -100,19 +107,40 @@ export default function DeliveryStore({ menus }: { menus: DeliveryMenu[] }) {
       prev.map((i) => (i.id === id ? { ...i, qty: i.qty - 1 } : i)).filter((i) => i.qty > 0)
     );
 
-  const sendWhatsApp = () => {
-    const lines = [
-      "*Pedido Bengal Delivery* 🐅",
-      "─────────────",
-      ...cart.map((i) => `${i.qty}× ${i.name} — ${money(i.price * i.qty)}`),
-      "─────────────",
-      `*Total: ${money(totalPrice)}*`,
-      "",
-      customer.nombre && `Nombre: ${customer.nombre}`,
-      customer.direccion && `Dirección: ${customer.direccion}`,
-      customer.notas && `Notas: ${customer.notas}`,
-    ].filter(Boolean).join("\n");
-    window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(lines)}`, "_blank");
+  const canCheckout = customer.nombre.trim().length > 0 && customer.direccion.trim().length > 0 && cart.length > 0;
+
+  const checkout = async () => {
+    if (!canCheckout || submitting) return;
+    setSubmitting(true);
+    setCheckoutError(null);
+    try {
+      const res = await fetch("/api/delivery/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: customer.nombre,
+          customerPhone: customer.telefono || null,
+          address: customer.direccion,
+          notes: customer.notas || null,
+          paymentMethod,
+          cart: cart.map((i) => ({ id: i.id, qty: i.qty })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "No se pudo procesar el pedido.");
+
+      // El pedido quedó registrado — se limpia el carrito local sin importar el método
+      localStorage.removeItem(CART_KEY);
+
+      if (paymentMethod === "mercadopago" && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        router.push(`/delivery/pedido/${data.orderId}`);
+      }
+    } catch (e) {
+      setCheckoutError(e instanceof Error ? e.message : "No se pudo procesar el pedido.");
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -312,13 +340,20 @@ export default function DeliveryStore({ menus }: { menus: DeliveryMenu[] }) {
                     <input
                       value={customer.nombre}
                       onChange={(e) => setCustomer({ ...customer, nombre: e.target.value })}
-                      placeholder="Tu nombre"
+                      placeholder="Tu nombre *"
+                      className="w-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm placeholder:text-[#B7AD9C]/50 focus:border-[#C9A45C]/60 focus:outline-none"
+                    />
+                    <input
+                      value={customer.telefono}
+                      onChange={(e) => setCustomer({ ...customer, telefono: e.target.value })}
+                      placeholder="Teléfono"
+                      type="tel"
                       className="w-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm placeholder:text-[#B7AD9C]/50 focus:border-[#C9A45C]/60 focus:outline-none"
                     />
                     <input
                       value={customer.direccion}
                       onChange={(e) => setCustomer({ ...customer, direccion: e.target.value })}
-                      placeholder="Dirección de entrega"
+                      placeholder="Dirección de entrega *"
                       className="w-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm placeholder:text-[#B7AD9C]/50 focus:border-[#C9A45C]/60 focus:outline-none"
                     />
                     <textarea
@@ -328,6 +363,40 @@ export default function DeliveryStore({ menus }: { menus: DeliveryMenu[] }) {
                       rows={2}
                       className="w-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm placeholder:text-[#B7AD9C]/50 focus:border-[#C9A45C]/60 focus:outline-none resize-none"
                     />
+                  </div>
+
+                  {/* Método de pago */}
+                  <div className="pt-5 mt-5 border-t border-white/10">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-[#B7AD9C] mb-3">Cómo pagás</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setPaymentMethod("mercadopago")}
+                        className={`flex flex-col items-center gap-1.5 px-3 py-3 border text-center transition-colors ${
+                          paymentMethod === "mercadopago"
+                            ? "border-[#C9A45C] bg-[#C9A45C]/10 text-[#C9A45C]"
+                            : "border-white/10 text-[#B7AD9C] hover:border-white/25"
+                        }`}
+                      >
+                        <CreditCard size={18} />
+                        <span className="text-[11px] uppercase tracking-[0.1em]">Mercado Pago</span>
+                      </button>
+                      <button
+                        onClick={() => setPaymentMethod("efectivo")}
+                        className={`flex flex-col items-center gap-1.5 px-3 py-3 border text-center transition-colors ${
+                          paymentMethod === "efectivo"
+                            ? "border-[#C9A45C] bg-[#C9A45C]/10 text-[#C9A45C]"
+                            : "border-white/10 text-[#B7AD9C] hover:border-white/25"
+                        }`}
+                      >
+                        <Banknote size={18} />
+                        <span className="text-[11px] uppercase tracking-[0.1em]">Efectivo</span>
+                      </button>
+                    </div>
+                    <p className="text-[#B7AD9C]/60 text-[11px] mt-2 font-light">
+                      {paymentMethod === "mercadopago"
+                        ? "Te llevamos a Mercado Pago para completar el pago de forma segura."
+                        : "Pagás en efectivo cuando recibas tu pedido."}
+                    </p>
                   </div>
                 </div>
               )}
@@ -339,15 +408,30 @@ export default function DeliveryStore({ menus }: { menus: DeliveryMenu[] }) {
                   <span className="text-[#B7AD9C] text-sm uppercase tracking-[0.2em]">Total</span>
                   <span className="text-[#C9A45C] text-2xl font-medium">{money(totalPrice)}</span>
                 </div>
+                {checkoutError && (
+                  <div className="flex items-start gap-2 mb-3 px-3 py-2.5 bg-red-950/40 border border-red-800/40 text-red-300 text-xs">
+                    <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                    {checkoutError}
+                  </div>
+                )}
                 <button
-                  onClick={sendWhatsApp}
-                  className="w-full py-4 bg-[#25D366] text-[#0B0A09] text-[12px] uppercase tracking-[0.2em] font-semibold hover:bg-[#2EE476] transition-colors"
+                  onClick={checkout}
+                  disabled={!canCheckout || submitting}
+                  className="w-full flex items-center justify-center gap-2 py-4 bg-[#C9A45C] text-[#0B0A09] text-[12px] uppercase tracking-[0.2em] font-semibold hover:bg-[#D8B76F] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Enviar pedido por WhatsApp
+                  {submitting ? (
+                    <><Loader2 size={15} className="animate-spin" /> Procesando…</>
+                  ) : paymentMethod === "mercadopago" ? (
+                    "Pagar con Mercado Pago"
+                  ) : (
+                    "Confirmar pedido"
+                  )}
                 </button>
-                <p className="text-center text-[#B7AD9C]/60 text-[11px] mt-3 font-light">
-                  Confirmamos zona, tiempo y pago por WhatsApp.
-                </p>
+                {!canCheckout && (
+                  <p className="text-center text-[#B7AD9C]/60 text-[11px] mt-3 font-light">
+                    Completá tu nombre y dirección para continuar.
+                  </p>
+                )}
               </div>
             )}
           </aside>

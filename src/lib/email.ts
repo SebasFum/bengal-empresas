@@ -196,3 +196,59 @@ export async function sendOrderOnTheWay(input: OrderOnTheWayInput) {
     `),
   });
 }
+
+// ─── Aviso interno: nuevo pedido de Delivery ───────────────────
+
+type DeliveryOrderAlertInput = {
+  orderId: string;
+  customerName: string;
+  customerPhone: string | null;
+  address: string;
+  notes: string | null;
+  items: { name: string; price: number; qty: number }[];
+  total: number;
+  paymentMethod: "mercadopago" | "efectivo";
+};
+
+export async function sendDeliveryOrderAlert(input: DeliveryOrderAlertInput) {
+  if (emailDisabled()) {
+    console.log("[email] RESEND_API_KEY no configurada — saltando aviso de delivery");
+    return;
+  }
+  const recipients = (process.env.DELIVERY_ALERT_EMAILS ?? "")
+    .split(",").map((e) => e.trim()).filter(Boolean);
+  if (recipients.length === 0) {
+    console.log("[email] DELIVERY_ALERT_EMAILS no configurada — saltando aviso de delivery");
+    return;
+  }
+
+  const paymentLabel = input.paymentMethod === "mercadopago" ? "💳 Pagado con Mercado Pago" : "💵 Efectivo contra entrega";
+  const itemsHtml = input.items.map((i) =>
+    `<p style="margin:0 0 4px;color:#2C2825;font-size:14px;">${i.qty}× ${i.name} — $${(i.price * i.qty).toLocaleString("es-AR")}</p>`
+  ).join("");
+
+  await resend.emails.send({
+    from: FROM,
+    replyTo: REPLY_TO,
+    to: recipients,
+    subject: `🐅 Nuevo pedido Delivery — ${input.customerName}`,
+    html: shell(`
+      <div style="background:#2C2825;padding:28px 32px;text-align:center;">
+        <h1 style="color:#F5EFE6;margin:0;font-size:20px;font-weight:700;">🔔 Nuevo pedido de Delivery</h1>
+        <p style="color:#B8AFA3;margin:6px 0 0;font-size:13px;">${paymentLabel}</p>
+      </div>
+      <div style="padding:28px 32px;">
+        <div style="background:#FAF7F2;border-radius:12px;padding:20px;border:1px solid #EDE8E0;">
+          <p style="margin:0 0 8px;color:#6b7280;font-size:14px;">Cliente: <strong style="color:#2C2825;">${input.customerName}</strong>${input.customerPhone ? ` · ${input.customerPhone}` : ""}</p>
+          <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">Dirección: <strong style="color:#2C2825;">${input.address}</strong></p>
+          ${itemsHtml}
+          ${input.notes ? `<p style="margin:8px 0 0;color:#B45309;font-size:13px;">⚠️ Nota: ${input.notes}</p>` : ""}
+          <p style="margin:12px 0 0;font-weight:700;color:#C4704F;font-size:18px;">Total: $${input.total.toLocaleString("es-AR")}</p>
+        </div>
+        <p style="color:#9CA3AF;font-size:12px;margin:16px 0 0;text-align:center;">
+          N° de pedido: <span style="font-family:monospace;color:#6b7280;">${input.orderId.slice(-8).toUpperCase()}</span>
+        </p>
+      </div>
+    `),
+  });
+}
