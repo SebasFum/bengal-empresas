@@ -6,14 +6,14 @@ const eventTypes = [
   {
     title: "Desayunos Corporativos",
     description: "Ideal para kick-offs, bienvenidas, reuniones matutinas o días de logro. Pastelería artesanal, cafés especiales y opciones saladas premium.",
-    image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=85",
+    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=85",
     includes: ["Pastelería artesanal", "Sándwiches premium", "Cafés y jugos", "Montaje incluido"],
     capacity: "Desde 10 personas",
   },
   {
     title: "Coffee Breaks",
     description: "Para capacitaciones, workshops y reuniones largas. Selección de snacks, frutas y bebidas calientes servidas en el momento.",
-    image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=600&q=85",
+    image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&q=85",
     includes: ["Mini sándwiches", "Frutas frescas", "Scones y medialunas", "Bebidas calientes y frías"],
     capacity: "Desde 8 personas",
   },
@@ -27,21 +27,21 @@ const eventTypes = [
   {
     title: "Cenas y Celebraciones",
     description: "Fin de año, lanzamientos, premiaciones. Menús especiales, decoración personalizada y servicio a la altura de la ocasión.",
-    image: "https://images.unsplash.com/photo-1555244162-803834f70033?w=600&q=85",
+    image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=600&q=85",
     includes: ["Menú de 3 o 4 pasos", "Bebidas y brindis", "Decoración temática opcional", "Mozos incluidos"],
     capacity: "Desde 20 personas",
   },
   {
     title: "Catering para Capacitaciones",
     description: "Box lunch o servicio en sala para formaciones internas, trainings y workshops de medio día o día completo.",
-    image: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=600&q=85",
+    image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=600&q=85",
     includes: ["Box lunch premium", "Snacks de media mañana", "Coffee break", "Hidratación incluida"],
     capacity: "Desde 10 personas",
   },
   {
     title: "Eventos Especiales",
     description: "Lanzamientos de producto, aniversarios, visitas de clientes internacionales. Cada evento es diseñado a medida.",
-    image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=600&q=85",
+    image: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=600&q=85",
     includes: ["Menú y formato a medida", "Presentación personalizada", "Coordinación de evento", "Servicio completo"],
     capacity: "Sin mínimo",
   },
@@ -54,7 +54,7 @@ export default function EventosPage() {
       <section className="relative min-h-[65vh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=1600&q=85"
+            src="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1600&q=85"
             alt="Eventos corporativos premium"
             fill
             className="object-cover"

@@ -92,7 +92,7 @@ export default async function HistorialPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: "Pedidos este mes", value: monthOrders.length.toString() },
-            { label: "Gasto del mes", value: `$${monthTotal.toLocaleString("es-AR")}` },
+            { label: "Gasto del mes", value: `$${Number(monthTotal).toLocaleString("es-AR")}` },
             { label: "Plato favorito", value: favorite?.name ?? "—" },
             { label: "Promedio por pedido", value: avgPerOrder > 0 ? `$${Math.round(avgPerOrder).toLocaleString("es-AR")}` : "—" },
           ].map((s) => (
@@ -141,7 +141,7 @@ export default async function HistorialPage() {
                         <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${STATUS_STYLES[order.status] ?? "bg-gray-100 text-gray-600"}`}>
                           {STATUS_LABELS[order.status] ?? order.status}
                         </span>
-                        <span className="font-bold text-graphite-800 text-sm">${order.total.toLocaleString("es-AR")}</span>
+                        <span className="font-bold text-graphite-800 text-sm">${Number(order.total).toLocaleString("es-AR")}</span>
                         <Link
                           href="/pedidos"
                           className="inline-flex items-center gap-1 text-xs text-terracotta-600 font-semibold hover:text-terracotta-700 transition-colors"

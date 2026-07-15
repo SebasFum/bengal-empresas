@@ -75,7 +75,7 @@ export default async function PanelEmpresaPage() {
           {[
             { label: "Miembros del equipo", value: teamMembers.length, icon: Users, color: "text-blue-600 bg-blue-50" },
             { label: "Pedidos este mes", value: monthRows.length, icon: ShoppingBag, color: "text-terracotta-600 bg-terracotta-50" },
-            { label: "Gasto mensual", value: `$${monthTotal.toLocaleString("es-AR")}`, icon: TrendingUp, color: "text-green-600 bg-green-50" },
+            { label: "Gasto mensual", value: `$${Number(monthTotal).toLocaleString("es-AR")}`, icon: TrendingUp, color: "text-green-600 bg-green-50" },
             { label: "Pedidos hoy", value: todayTeamOrders.length, icon: ShoppingBag, color: "text-gold-700 bg-gold-50" },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl p-5 shadow-card border border-cream-200">
@@ -102,7 +102,7 @@ export default async function PanelEmpresaPage() {
               />
             </div>
             <p className="text-xs text-warm-400 mt-2">
-              ${monthTotal.toLocaleString("es-AR")} de ${(Number(company?.budget_per_person ?? 0) * (teamMembers.length || 1) * 20).toLocaleString("es-AR")} estimados
+              ${Number(monthTotal).toLocaleString("es-AR")} de ${(Number(company?.budget_per_person ?? 0) * (teamMembers.length || 1) * 20).toLocaleString("es-AR")} estimados
             </p>
           </div>
         )}

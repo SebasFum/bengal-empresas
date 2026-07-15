@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Search, ChevronRight, Leaf, Wheat, Heart, Flame, Dumbbell } from "lucide-react";
 import type { MenusByCategory } from "./page";
 import type { Menu } from "@/lib/supabase/types";
+import DishModal from "@/components/DishModal";
 
 // ─── Config de categorías ────────────────────────────────────────────────────
 const CATEGORY_META: Record<string, { label: string; subtitle: string; emoji: string }> = {
@@ -41,11 +42,11 @@ function matchesDiet(tags: string[], diet: DietKey): boolean {
 }
 
 function formatPrice(n: number) {
-  return `$ ${n.toLocaleString("es-AR")}`;
+  return `$ ${Number(n).toLocaleString("es-AR")}`;
 }
 
 // ─── Item de carta ───────────────────────────────────────────────────────────
-function CartaItem({ item }: { item: Menu }) {
+function CartaItem({ item, onOpen }: { item: Menu; onOpen: (m: Menu) => void }) {
   const hasImage = Boolean(item.image_url);
 
   return (
@@ -95,9 +96,13 @@ function CartaItem({ item }: { item: Menu }) {
         )}
       </div>
 
-      {/* Thumbnail */}
+      {/* Thumbnail — clic abre el modal con foto grande y sugerencias */}
       {hasImage && (
-        <div className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border border-cream-200 shadow-sm">
+        <button
+          onClick={() => onOpen(item)}
+          title="Ver plato"
+          className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border border-cream-200 shadow-sm cursor-pointer focus:outline-none"
+        >
           <Image
             src={item.image_url!}
             alt={item.name}
@@ -106,7 +111,7 @@ function CartaItem({ item }: { item: Menu }) {
             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
             unoptimized
           />
-        </div>
+        </button>
       )}
     </div>
   );
@@ -117,10 +122,12 @@ function CategorySection({
   catKey,
   items,
   sectionRef,
+  onOpen,
 }: {
   catKey: string;
   items: Menu[];
   sectionRef: (el: HTMLElement | null) => void;
+  onOpen: (m: Menu) => void;
 }) {
   const meta = CATEGORY_META[catKey] ?? { label: catKey, subtitle: "", emoji: "📋" };
 
@@ -149,7 +156,7 @@ function CategorySection({
       {/* Lista de items */}
       <div className="divide-y divide-cream-200">
         {items.map((item) => (
-          <CartaItem key={item.id} item={item} />
+          <CartaItem key={item.id} item={item} onOpen={onOpen} />
         ))}
       </div>
     </section>
@@ -167,6 +174,8 @@ export default function MenusClient({
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeDiet, setActiveDiet] = useState<DietKey>("all");
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Menu | null>(null);
+  const allItems = useMemo(() => Object.values(grouped).flat(), [grouped]);
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const setSectionRef = useCallback(
@@ -324,6 +333,7 @@ export default function MenusClient({
                   catKey={cat}
                   items={items}
                   sectionRef={setSectionRef(cat)}
+                  onOpen={setSelected}
                 />
               ))}
             </div>
@@ -372,6 +382,26 @@ export default function MenusClient({
           </div>
         </div>
       </section>
+
+      {/* ── Modal de plato ── */}
+      {selected && (
+        <DishModal
+          item={selected}
+          all={allItems}
+          theme="light"
+          money={formatPrice}
+          onClose={() => setSelected(null)}
+          onSwap={(d) => setSelected(d as Menu)}
+          action={
+            <Link
+              href="/pedidos"
+              className="block w-full text-center py-3.5 bg-terracotta-500 text-white text-sm font-semibold rounded-xl hover:bg-terracotta-600 transition-colors"
+            >
+              Pedirlo en el portal
+            </Link>
+          }
+        />
+      )}
     </>
   );
 }

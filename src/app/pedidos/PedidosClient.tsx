@@ -47,7 +47,7 @@ type Props = {
 };
 
 function fmt(n: number) {
-  return `$ ${n.toLocaleString("es-AR")}`;
+  return `$ ${Number(n).toLocaleString("es-AR")}`;
 }
 
 // ── Card de plato ─────────────────────────────────────────────────────────────

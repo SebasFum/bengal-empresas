@@ -86,7 +86,7 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ id
             ))}
             <div className="flex justify-between pt-3 mt-3 border-t border-white/10 font-medium">
               <span>Total</span>
-              <span className="text-[#C9A45C]">${order.total.toLocaleString("es-AR")}</span>
+              <span className="text-[#C9A45C]">${Number(order.total).toLocaleString("es-AR")}</span>
             </div>
           </div>
 

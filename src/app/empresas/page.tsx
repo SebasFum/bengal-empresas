@@ -301,7 +301,7 @@ export default async function EmpresasHomePage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-terracotta-400 font-bold text-lg">
-                          $ {menu.price.toLocaleString("es-AR")}
+                          $ {Number(menu.price).toLocaleString("es-AR")}
                         </span>
                         {menu.calories && (
                           <span className="flex items-center gap-0.5 text-warm-500 text-xs mt-0.5">

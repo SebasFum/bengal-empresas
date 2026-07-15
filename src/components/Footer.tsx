@@ -95,7 +95,7 @@ export default function Footer() {
               </a>
               <span className="flex items-center gap-2 text-sm text-warm-400">
                 <MapPin size={14} />
-                CABA y GBA Norte
+                Pilar y alrededores · 20 km a la redonda
               </span>
             </div>
           </div>

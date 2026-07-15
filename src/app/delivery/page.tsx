@@ -77,7 +77,7 @@ export default async function DeliveryPage() {
             BENGAL
           </Link>
           <p className="text-[11px] uppercase tracking-[0.25em] text-[#B7AD9C]/70">
-            Pilar y alrededores · consultá tu zona
+            Pilar, Del Viso, Manzanares y alrededores · 20 km a la redonda
           </p>
           <a
             href="mailto:hola@bengalrestaurante.com.ar"

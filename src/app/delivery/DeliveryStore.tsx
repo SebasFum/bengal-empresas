@@ -9,6 +9,7 @@ import {
   CreditCard, Banknote, Loader2, AlertCircle,
 } from "lucide-react";
 import type { DeliveryMenu } from "@/lib/db-delivery";
+import DishModal from "@/components/DishModal";
 
 const CART_KEY = "bengal-delivery-cart-v1";
 const FALLBACK_IMG = "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80";
@@ -44,7 +45,7 @@ const TAG_BADGE: Record<string, { label: string; cls: string }> = {
 type CartItem = { id: string; name: string; price: number; qty: number };
 
 function money(n: number) {
-  return `$${n.toLocaleString("es-AR")}`;
+  return `$${Number(n).toLocaleString("es-AR")}`;
 }
 
 type PaymentMethod = "mercadopago" | "efectivo";
@@ -60,6 +61,7 @@ export default function DeliveryStore({ menus }: { menus: DeliveryMenu[] }) {
   const [loaded, setLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<DeliveryMenu | null>(null);
 
   // Persistencia del carrito
   useEffect(() => {
@@ -210,9 +212,13 @@ export default function DeliveryStore({ menus }: { menus: DeliveryMenu[] }) {
                 return (
                   <div
                     key={`${section.id}-${m.id}`}
-                    className="group bg-[#121009] border border-white/10 hover:border-[#C9A45C]/50 transition-all duration-300 overflow-hidden flex flex-col"
+                    className="group bg-[#121009] border border-white/10 hover:border-[#C9A45C]/50 transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/40"
                   >
-                    <div className="relative h-44 overflow-hidden">
+                    <div
+                      className="relative h-44 overflow-hidden cursor-pointer"
+                      onClick={() => setSelected(m)}
+                      title="Ver plato"
+                    >
                       <Image
                         src={m.image_url ?? FALLBACK_IMG}
                         alt={m.name}
@@ -234,7 +240,11 @@ export default function DeliveryStore({ menus }: { menus: DeliveryMenu[] }) {
                     </div>
 
                     <div className="p-5 flex flex-col flex-1">
-                      <h3 className="font-normal text-lg leading-snug mb-1.5" style={{ fontFamily: "var(--font-cormorant), serif" }}>
+                      <h3
+                        className="font-normal text-lg leading-snug mb-1.5 cursor-pointer hover:text-[#C9A45C] transition-colors"
+                        style={{ fontFamily: "var(--font-cormorant), serif" }}
+                        onClick={() => setSelected(m)}
+                      >
                         {m.name}
                       </h3>
                       {m.description && (
@@ -436,6 +446,47 @@ export default function DeliveryStore({ menus }: { menus: DeliveryMenu[] }) {
             )}
           </aside>
         </>
+      )}
+
+      {/* ── Modal de plato ── */}
+      {selected && (
+        <DishModal
+          item={selected}
+          all={menus}
+          theme="noir"
+          money={money}
+          onClose={() => setSelected(null)}
+          onSwap={(d) => setSelected(d as DeliveryMenu)}
+          action={(() => {
+            const q = qtyOf(selected.id);
+            return q === 0 ? (
+              <button
+                onClick={() => add(selected)}
+                className="w-full flex items-center justify-center gap-2 py-4 bg-[#C9A45C] text-[#0B0A09] text-[12px] uppercase tracking-[0.2em] font-semibold hover:bg-[#D8B76F] transition-colors"
+              >
+                <Plus size={14} /> Agregar al pedido
+              </button>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="inline-flex items-center border border-[#C9A45C]/60 flex-shrink-0">
+                  <button onClick={() => remove(selected.id)} className="px-4 py-3 text-[#C9A45C] hover:bg-[#C9A45C]/10 transition-colors">
+                    <Minus size={14} />
+                  </button>
+                  <span className="px-3 text-base font-medium text-[#EDE6DA] min-w-[32px] text-center">{q}</span>
+                  <button onClick={() => add(selected)} className="px-4 py-3 text-[#C9A45C] hover:bg-[#C9A45C]/10 transition-colors">
+                    <Plus size={14} />
+                  </button>
+                </div>
+                <button
+                  onClick={() => { setSelected(null); setCartOpen(true); }}
+                  className="flex-1 py-3.5 bg-[#C9A45C] text-[#0B0A09] text-[12px] uppercase tracking-[0.2em] font-semibold hover:bg-[#D8B76F] transition-colors"
+                >
+                  Ver mi pedido — {money(totalPrice)}
+                </button>
+              </div>
+            );
+          })()}
+        />
       )}
     </div>
   );

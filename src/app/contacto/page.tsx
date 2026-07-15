@@ -43,7 +43,7 @@ export default function ContactoPage() {
                   {[
                     { icon: Mail, label: "Email", value: "hola@bengalrestaurante.com.ar", href: "mailto:hola@bengalrestaurante.com.ar" },
                     { icon: Phone, label: "WhatsApp", value: "+54 9 11 2899-9904", href: "https://wa.me/5491128999904" },
-                    { icon: MapPin, label: "Zona de cobertura", value: "CABA y GBA Norte", href: null },
+                    { icon: MapPin, label: "Zona de cobertura", value: "Pilar, Del Viso, Parque Industrial y Manzanares — 20 km a la redonda de Pilar centro", href: null },
                     { icon: Clock, label: "Horario", value: "Lun–Vie de 8:00 a 18:00 hs", href: null },
                   ].map(({ icon: Icon, label, value, href }) => (
                     <div key={label} className="flex items-start gap-4 bg-white rounded-xl p-4 border border-cream-200 shadow-card">

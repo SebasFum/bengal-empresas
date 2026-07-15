@@ -162,7 +162,7 @@ export default function PanelAdminClient({
           {[
             { label: "Pedidos hoy", value: stats.todayOrders, icon: ShoppingBag, color: "text-terracotta-600 bg-terracotta-50" },
             { label: "Empresas activas", value: stats.activeCompanies, icon: Users, color: "text-blue-600 bg-blue-50" },
-            { label: "Facturación hoy", value: `$${stats.revenueToday.toLocaleString("es-AR")}`, icon: TrendingUp, color: "text-green-600 bg-green-50" },
+            { label: "Facturación hoy", value: `$${Number(stats.revenueToday).toLocaleString("es-AR")}`, icon: TrendingUp, color: "text-green-600 bg-green-50" },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl p-5 shadow-card border border-cream-200">
               <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl mb-3 ${s.color}`}>
@@ -215,7 +215,7 @@ export default function PanelAdminClient({
                         </p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="font-bold text-graphite-800 text-sm">${order.total.toLocaleString("es-AR")}</span>
+                        <span className="font-bold text-graphite-800 text-sm">${Number(order.total).toLocaleString("es-AR")}</span>
                         <button onClick={() => advanceStatus(order.id, order.status)} disabled={!canAdvance || isPending}
                           title={canAdvance ? "Avanzar estado" : "Estado final"}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${STATUS_STYLES[order.status] ?? "bg-gray-100 text-gray-600"} ${canAdvance ? "hover:ring-2 hover:ring-offset-1 hover:ring-terracotta-400 cursor-pointer" : "cursor-default opacity-80"}`}>
@@ -289,7 +289,7 @@ export default function PanelAdminClient({
                       <p className="text-warm-400 text-xs">{c.contact_email ?? "—"} · Entrega: {c.delivery_time} hs</p>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      {c.budget_per_person && <span className="text-xs text-warm-400 hidden md:block">${c.budget_per_person.toLocaleString("es-AR")}/persona</span>}
+                      {c.budget_per_person && <span className="text-xs text-warm-400 hidden md:block">${Number(c.budget_per_person).toLocaleString("es-AR")}/persona</span>}
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${c.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                         {c.active ? "Activa" : "Inactiva"}
                       </span>
@@ -331,7 +331,7 @@ function RankingRows({ rows, unit }: {
             </div>
             <div className="flex items-center gap-3 flex-shrink-0 text-right">
               <span className="text-xs text-warm-400">{r.qty} {unit}</span>
-              <span className="font-bold text-graphite-800 text-sm min-w-[80px]">${r.revenue.toLocaleString("es-AR")}</span>
+              <span className="font-bold text-graphite-800 text-sm min-w-[80px]">${Number(r.revenue).toLocaleString("es-AR")}</span>
             </div>
           </div>
           <div className="h-1.5 bg-cream-200 rounded-full overflow-hidden ml-[34px]">
@@ -376,8 +376,8 @@ function Reportes({ reports }: { reports: ReportsData }) {
       {/* KPIs 30 días */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Pedidos (30 días)", value: totalOrders.toLocaleString("es-AR") },
-          { label: "Facturación (30 días)", value: `$${totalRevenue.toLocaleString("es-AR")}` },
+          { label: "Pedidos (30 días)", value: Number(totalOrders).toLocaleString("es-AR") },
+          { label: "Facturación (30 días)", value: `$${Number(totalRevenue).toLocaleString("es-AR")}` },
           { label: "Ticket promedio", value: `$${Math.round(avgTicket).toLocaleString("es-AR")}` },
           { label: "Plato estrella", value: topDish?.name ?? "—" },
         ].map((s) => (
@@ -403,7 +403,7 @@ function Reportes({ reports }: { reports: ReportsData }) {
               return (
                 <div key={d.date} className="flex-1 flex flex-col items-center gap-1.5 min-w-0 group relative">
                   <span className="absolute -top-1 -translate-y-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-graphite-800 text-cream-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap z-10 shadow-lg">
-                    {dayDate.toLocaleDateString("es-AR", { day: "numeric", month: "short" })} · {d.qty} ped. · ${d.revenue.toLocaleString("es-AR")}
+                    {dayDate.toLocaleDateString("es-AR", { day: "numeric", month: "short" })} · {d.qty} ped. · ${Number(d.revenue).toLocaleString("es-AR")}
                   </span>
                   <div className="w-full h-28 flex items-end">
                     <div
@@ -512,7 +512,7 @@ function MenuDelDia({ dailyMenus, allMenus, today, todayLabel, onUpdate }: {
                 <div key={dm.id} className="flex flex-col md:flex-row md:items-center gap-3 px-6 py-4 hover:bg-cream-50">
                   <div className="flex-1">
                     <p className="font-medium text-graphite-800">{dm.menus?.name ?? "—"}</p>
-                    <p className="text-xs text-warm-400 mt-0.5 capitalize">{dm.menus?.category} · ${dm.menus?.price.toLocaleString("es-AR")}</p>
+                    <p className="text-xs text-warm-400 mt-0.5 capitalize">{dm.menus?.category} · ${Number(dm.menus?.price).toLocaleString("es-AR")}</p>
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="text-center min-w-[50px]">
@@ -547,7 +547,7 @@ function MenuDelDia({ dailyMenus, allMenus, today, todayLabel, onUpdate }: {
           <select value={selectedMenuId} onChange={(e) => setSelectedMenuId(e.target.value)}
             className="input-base flex-1">
             <option value="">— Seleccionar plato —</option>
-            {available.map((m) => <option key={m.id} value={m.id}>{m.name} (${m.price.toLocaleString("es-AR")})</option>)}
+            {available.map((m) => <option key={m.id} value={m.id}>{m.name} (${Number(m.price).toLocaleString("es-AR")})</option>)}
           </select>
           <div className="flex items-center gap-2">
             <label className="text-xs text-warm-400 whitespace-nowrap">Stock:</label>
@@ -643,7 +643,7 @@ function Catalogo({ menus, onUpdate }: { menus: MenuRow[]; onUpdate: Dispatch<Se
                   {!m.active && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>}
                 </div>
                 <p className="text-warm-400 text-xs mt-0.5">
-                  ${m.price.toLocaleString("es-AR")} {m.calories ? `· ${m.calories} kcal` : ""}
+                  ${Number(m.price).toLocaleString("es-AR")} {m.calories ? `· ${m.calories} kcal` : ""}
                   {m.tags.length > 0 && ` · ${m.tags.join(", ")}`}
                 </p>
               </div>
@@ -808,7 +808,7 @@ function Ingredientes({ ingredients, onUpdate }: { ingredients: IngredientRow[];
                       {isLow && <span title="Stock bajo"><AlertTriangle size={13} className="text-amber-500" /></span>}
                     </div>
                     <p className="text-warm-400 text-xs mt-0.5">
-                      {ing.cost_per_unit ? `$${ing.cost_per_unit.toLocaleString("es-AR")}/${ing.unit}` : `unidad: ${ing.unit}`}
+                      {ing.cost_per_unit ? `$${Number(ing.cost_per_unit).toLocaleString("es-AR")}/${ing.unit}` : `unidad: ${ing.unit}`}
                       {ing.min_stock_alert ? ` · alerta: ${ing.min_stock_alert}` : ""}
                     </p>
                   </div>
@@ -939,7 +939,7 @@ function PreciosSegmento({ menus, prices, onUpdate }: {
             {activeMenus.map((m) => (
               <tr key={m.id} className="hover:bg-cream-50">
                 <td className="px-6 py-3 font-medium text-graphite-800">{m.name}</td>
-                <td className="px-4 py-3 text-center text-warm-500">${m.price.toLocaleString("es-AR")}</td>
+                <td className="px-4 py-3 text-center text-warm-500">${Number(m.price).toLocaleString("es-AR")}</td>
                 {SEGMENTS.map((seg) => {
                   const price = getPrice(m.id, seg);
                   const key = `${m.id}-${seg}`;
@@ -960,7 +960,7 @@ function PreciosSegmento({ menus, prices, onUpdate }: {
                       ) : (
                         <button onClick={() => startEdit(m.id, seg)}
                           className={`px-3 py-1 rounded-lg text-sm font-medium transition-all hover:bg-cream-100 ${price ? "text-graphite-800" : "text-warm-300"} ${justSaved ? "ring-2 ring-green-400" : ""}`}>
-                          {price ? `$${price.toLocaleString("es-AR")}` : "—"}
+                          {price ? `$${Number(price).toLocaleString("es-AR")}` : "—"}
                         </button>
                       )}
                     </td>
@@ -1040,7 +1040,7 @@ function Promociones({ promos, onUpdate }: { promos: PromotionRow[]; onUpdate: D
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-graphite-800 text-sm">{p.name}</p>
                     <span className="px-2 py-0.5 bg-terracotta-50 text-terracotta-700 text-xs font-semibold rounded-full">
-                      {p.discount_type === "percentage" ? `${p.discount_value}% OFF` : `$${p.discount_value.toLocaleString("es-AR")} OFF`}
+                      {p.discount_type === "percentage" ? `${p.discount_value}% OFF` : `$${Number(p.discount_value).toLocaleString("es-AR")} OFF`}
                     </span>
                     {p.applies_to !== "all" && (
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${SEGMENT_COLORS[p.applies_to] ?? "bg-gray-100 text-gray-600"}`}>
@@ -1050,7 +1050,7 @@ function Promociones({ promos, onUpdate }: { promos: PromotionRow[]; onUpdate: D
                   </div>
                   <p className="text-warm-400 text-xs mt-0.5">
                     {p.valid_from} → {p.valid_until}
-                    {p.min_order_total ? ` · mín. $${p.min_order_total.toLocaleString("es-AR")}` : ""}
+                    {p.min_order_total ? ` · mín. $${Number(p.min_order_total).toLocaleString("es-AR")}` : ""}
                   </p>
                 </div>
                 <button onClick={() => handleToggle(p.id, p.active)} disabled={isPending}

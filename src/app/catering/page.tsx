@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cormorant, jost } from "@/lib/brand-fonts";
 import CateringQuoteForm from "./CateringQuoteForm";
@@ -13,26 +14,32 @@ const servicios = [
   {
     name: "Desayunos corporativos",
     desc: "Viennoiserie, frutas frescas, yogur con granola y café en serio. El día arranca distinto cuando la mesa está bien puesta.",
+    img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80",
   },
   {
     name: "Coffee breaks & tés",
     desc: "Pausas que reactivan cualquier reunión: dulce, salado y bebidas calientes en servicio continuo, sin que nadie tenga que ocuparse.",
+    img: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80",
   },
   {
     name: "Almuerzos ejecutivos",
     desc: "Menús emplatados para directorio, clientes y visitas que hay que impresionar. Presentación de restaurante, en tu oficina.",
+    img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
   },
   {
     name: "Eventos corporativos",
     desc: "Family Day, fin de año, lanzamientos, aniversarios. De la propuesta al desmontaje, nos ocupamos de punta a punta.",
+    img: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80",
   },
   {
     name: "After office & cocktail",
     desc: "Finger food, tapeos de la casa y barra. La forma elegante de cerrar el día en alto con el equipo.",
+    img: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&q=80",
   },
   {
     name: "Celebraciones privadas",
     desc: "Cumpleaños, reuniones familiares y fiestas en casa. El servicio completo de Bengal, puertas adentro.",
+    img: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&q=80",
   },
 ];
 
@@ -67,7 +74,15 @@ export default function CateringPage() {
       </header>
 
       {/* ── HERO ── */}
-      <section className="relative min-h-[85vh] flex flex-col items-center justify-center text-center px-6">
+      <section className="relative min-h-[85vh] flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1920&q=80"
+          alt=""
+          fill
+          priority
+          className="object-cover opacity-25"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0A09]/70 via-[#0B0A09]/60 to-[#0B0A09]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(201,164,92,0.08),transparent_60%)]" />
         <p className="relative text-[11px] uppercase tracking-[0.45em] text-[#C9A45C] mb-8">Bengal Catering</p>
         <h1
@@ -122,13 +137,25 @@ export default function CateringPage() {
           <h2 className="text-3xl md:text-4xl font-light text-center mb-16" style={{ fontFamily: "var(--font-cormorant), serif" }}>
             Un servicio para cada ocasión
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {servicios.map((s) => (
-              <div key={s.name} className="bg-[#0B0A09] p-8 hover:bg-[#12100D] transition-colors">
-                <h3 className="text-xl mb-2 font-normal" style={{ fontFamily: "var(--font-cormorant), serif" }}>
-                  {s.name}
-                </h3>
-                <p className="text-[#B7AD9C] font-light text-sm leading-relaxed">{s.desc}</p>
+              <div key={s.name} className="group bg-[#121009] border border-white/10 hover:border-[#C9A45C]/50 transition-all duration-300 overflow-hidden hover:-translate-y-1">
+                <div className="relative h-44 overflow-hidden">
+                  <Image
+                    src={s.img}
+                    alt={s.name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B0A09]/80 to-transparent" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl mb-2 font-normal" style={{ fontFamily: "var(--font-cormorant), serif" }}>
+                    {s.name}
+                  </h3>
+                  <p className="text-[#B7AD9C] font-light text-sm leading-relaxed">{s.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -152,6 +179,26 @@ export default function CateringPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── BANDA EDITORIAL ── */}
+      <section className="relative h-64 md:h-96 overflow-hidden border-t border-white/5">
+        <Image
+          src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1920&q=80"
+          alt="La mesa de Bengal"
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-[#0B0A09]/55" />
+        <div className="absolute inset-0 flex items-center justify-center px-6">
+          <p
+            className="text-2xl md:text-4xl font-light italic text-[#EDE6DA] text-center max-w-2xl"
+            style={{ fontFamily: "var(--font-cormorant), serif" }}
+          >
+            «Los eventos se olvidan. Las mesas, no.»
+          </p>
         </div>
       </section>
 

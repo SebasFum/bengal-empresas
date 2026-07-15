@@ -189,7 +189,7 @@ export async function GET(request: Request) {
                     fontSize: "22px",
                     color: "rgba(250,247,242,0.55)",
                   }}>
-                    ${item.price.toLocaleString("es-AR")}
+                    ${Number(item.price).toLocaleString("es-AR")}
                   </span>
                 )}
               </div>
